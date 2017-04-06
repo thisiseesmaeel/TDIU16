@@ -46,7 +46,7 @@
 
   Recommended compile command:
   
-  gcc -m32 -Wall -Wextra -std=gnu99 -pedantic -g setup-argv.c
+  gcc -m32 -Wall -Wextra -std=gnu99 -g setup-argv.c
   
 */
 #error Read comments above, then remove this line.
@@ -97,29 +97,30 @@ struct main_args
 void dump(void* ptr, int size)
 {
   int i;
+  const int S = sizeof(void*);
   
-  printf("Adress  \thex-data \tchar-data\n");
+  printf("%2$-*1$s \t%3$-*1$s \t%4$-*1$s\n", S*2, "Adress", "hex-data", "char-data");
   
   for (i = size - 1; i >= 0; --i)
   {
-    void** adr = (void**)((unsigned)ptr + i);
-    unsigned char* byte = (unsigned char*)((unsigned)ptr + i);
+    void** adr = (void**)((unsigned long)ptr + i);
+    unsigned char* byte = (unsigned char*)((unsigned long)ptr + i);
 
-    printf("%08x\t", (unsigned)ptr + i); /* address */
+    printf("%0*lx\t", S*2, (unsigned long)ptr + i); /* address */
       
-    if ((i % 4) == 0)
+    if ((i % S) == 0)
       /* seems we're actually forbidden to read unaligned adresses */
-      printf("%08x\t", (unsigned)*adr); /* content interpreted as address */
+      printf("%0*lx\t", S*2, (unsigned long)*adr); /* content interpreted as address */
     else
-      printf("        \t"); /* fill */
+      printf("%*c\t", S*2, ' '); /* fill */
         
     if(*byte >= 32 && *byte < 127)
       printf("%c\n", *byte); /* content interpreted as character */
     else
       printf("\\%o\n", *byte);
     
-    if ((i % 4) == 0)
-      printf("------------------------------------------------\n");
+    if ((i % S) == 0)
+      printf("----------------------------------------------------------------\n");
   }
 }
 
@@ -183,6 +184,8 @@ void* setup_main_stack(const char* command_line, void* stack_top)
   int argc;
   int total_size;
   int line_size;
+  int cmdl_size;
+
   /* "cmd_line_on_stack" and "ptr_save" are variables that each store
    * one address, and at that address (the first) char (of a possible
    * sequence) can be found. */
@@ -234,8 +237,9 @@ int main()
   struct main_args* esp;
   char line[LINE_SIZE];
   void* simulated_stack = malloc(4096);
-  void* simulated_stack_top = (void*)((unsigned)simulated_stack + 4096);
+  void* simulated_stack_top = (void*)((unsigned long)simulated_stack + 4096);
   int i;
+  const int S = sizeof(void*);
   
   /* read one line of input, this will be the command-line */
   printf("Mata in en mening: ");
@@ -243,10 +247,10 @@ int main()
   
   /* put initial content on our simulated stack */
   esp = setup_main_stack(line, simulated_stack_top);
-  printf("# esp = %08x\n", (unsigned)esp);
+  printf("# esp = %0*lx\n", 2*S, (unsigned long)esp);
   
   /* dump memory area for verification */
-  dump(esp, (unsigned)simulated_stack_top - (unsigned)esp);
+  dump(esp, (unsigned long)simulated_stack_top - (unsigned long)esp);
   
   /* original command-line should not be needed anymore */
   for (i = 0; i < LINE_SIZE; ++i)
