@@ -16,7 +16,7 @@
  *
  * Recommended compilation command:
  *
- *  gcc -Wall -Wextra -std=gnu99 -pedantic -g pagedir.o verify_adr.c
+ *  gcc -Wall -Wextra -std=gnu99 -pedantic -m32 -g pagedir.o verify_adr.c
  */
 #error Read comment above and then remove this line.
 
