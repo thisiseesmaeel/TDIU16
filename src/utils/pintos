@@ -481,18 +481,27 @@ sub run_qemu {
       if $vga eq 'terminal';
     print "warning: qemu doesn't support jitter\n"
       if defined $jitter;
-    my (@cmd) = ('qemu');
+    my (@cmd) = ('qemu-system-i386'); # klaar@ida 2015-02-13
+
     for my $iface (0...3) {
 	my ($option) = ('-hda', '-hdb', '-hdc', '-hdd')[$iface];
 	push (@cmd, $option, $disks_by_iface[$iface]{FILE_NAME})
 	  if defined $disks_by_iface[$iface]{FILE_NAME};
     }
-    push (@cmd, '-p', $dport); # temporary disabled for test on lille4
+    # klaar@ida 2015-03-18:
+    # '-p' is not supported on modern qemu
+    # '-s' is default for '-gdb tcp:1234' on modern qemu
+    # '-S' will wait for debugger to connect
+    # You can not have both -gdb and -s
+    # Using '-gdb tcp::$dport' instead.
+    push (@cmd, '-gdb', "tcp::$dport", '-S') if $debug eq 'gdb';
+#    push (@cmd, '-p', $dport); # replaced by above
     push (@cmd, '-m', $mem);
+    push (@cmd, '-cpu', 'kvm32'); # klaar@ida 2015-05-07
     push (@cmd, '-net', 'none');
     push (@cmd, '-serial', 'stdio') if $serial && $vga ne 'none';
     push (@cmd, '-S') if $debug eq 'monitor';
-    push (@cmd, '-s', '-S') if $debug eq 'gdb';
+#    push (@cmd, '-s', '-S') if $debug eq 'gdb'; # replaced by above
     push (@cmd, '-monitor', 'null') if $vga eq 'none' && $debug eq 'none';
     push (@cmd, '-nographic') if $vga eq 'none';
     run_command (@cmd);
@@ -774,8 +783,11 @@ sub xsystem {
 
 		# Read and print out pipe data.
 		my ($len) = length ($buf);
+		# klaar@ida prestore sysread result to get rid of warning
+                #  Use of uninitialized value in numeric le (<=) at line 777.
+		my ($readcount) = sysread ($in, $buf, 4096, $len);
 		waitpid ($pid, 0), last
-		  if sysread ($in, $buf, 4096, $len) <= 0;
+		    if $readcount <= 0;
 		print substr ($buf, $len);
 
 		# Remove full lines from $buf and scan them for keywords.
@@ -800,7 +812,7 @@ sub xsystem {
 	alarm (0);
 	&$cleanup ();
 
-	if (WIFSIGNALED ($?) && WTERMSIG ($?) == SIGVTALRM ()) {
+	if (WIFSIGNALED ($?) && WTERMSIG ($?) == get_vtalarm ()) {
 	    seek (STDOUT, 0, 2);
 	    print "\nTIMEOUT after $timeout seconds of host CPU time\n";
 	    exit 0;
@@ -871,7 +883,13 @@ sub exec_setitimer {
     exit (1);
 }
 
-sub SIGVTALRM {
+# klaar@ida modified to solve perl warnings:
+#  Prototype mismatch: sub main::SIGVTALRM () vs none at line 883.
+#  Constant subroutine SIGVTALRM redefined at line 875.
+sub get_vtalarm {
+    if (defined &SIGVTALRM) {
+	return SIGVTALRM ();
+    }
     use Config;
     my $i = 0;
     foreach my $name (split(' ', $Config{sig_name})) {
