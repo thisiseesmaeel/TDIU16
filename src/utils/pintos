@@ -496,8 +496,8 @@ sub run_qemu {
     # Using '-gdb tcp::$dport' instead.
     push (@cmd, '-gdb', "tcp::$dport", '-S') if $debug eq 'gdb';
 #    push (@cmd, '-p', $dport); # replaced by above
+#    push (@cmd, '-singlestep');
     push (@cmd, '-m', $mem);
-    push (@cmd, '-cpu', 'kvm32'); # klaar@ida 2015-05-07
     push (@cmd, '-net', 'none');
     push (@cmd, '-serial', 'stdio') if $serial && $vga ne 'none';
     push (@cmd, '-S') if $debug eq 'monitor';
