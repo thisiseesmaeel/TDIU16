@@ -513,6 +513,7 @@ sub run_qemu {
 
     # When using isa-debug-exit, we can not exit QEMU cleanly. We exit with 0x30, which will make QEMU exit
     # with the code 0x30*2 + 1 = 97, and therefore we treat 97 as success as well.
+    print join (' ', @cmd), "\n";
     my ($exit) = xsystem (@cmd);
     if (WIFEXITED($exit)) {
 	$exit = WEXITSTATUS($exit);
