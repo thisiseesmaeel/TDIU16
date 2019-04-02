@@ -99,7 +99,7 @@ void dump(void* ptr, int size)
   int i;
   const int S = sizeof(void*);
   
-  printf("%2$-*1$s \t%3$-*1$s \t%4$-*1$s\n", S*2, "Adress", "hex-data", "char-data");
+  printf("%2$-*1$s \t%3$-*1$s \t%4$-*1$s\n", S*2, "Address", "hex-data", "char-data");
   
   for (i = size - 1; i >= 0; --i)
   {
@@ -193,34 +193,35 @@ void* setup_main_stack(const char* command_line, void* stack_top)
   char* ptr_save;
   int i = 0;
   
+
   /* calculate the bytes needed to store the command_line */
-  line_size = ??? ;
+  line_size = YOUR_CODE_HERE;
   STACK_DEBUG("# line_size = %d\n", line_size);
 
   /* round up to make it even divisible by 4 */
-  line_size = ??? ;
+  line_size = YOUR_CODE_HERE;
   STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
 
   /* calculate how many words the command_line contain */
-  argc = ??? ;
+  argc = YOUR_CODE_HERE;
   STACK_DEBUG("# argc = %d\n", argc);
 
   /* calculate the size needed on our simulated stack */
-  total_size = ??? ;
+  total_size = YOUR_CODE_HERE;
   STACK_DEBUG("# total_size = %d\n", total_size);
   
 
   /* calculate where the final stack top will be located */
-  esp = ??? ;
+  esp = YOUR_CODE_HERE;
   
   /* setup return address and argument count */
-  esp->ret = ??? ;
-  esp->argc = ??? ;
+  esp->ret = YOUR_CODE_HERE;
+  esp->argc = YOUR_CODE_HERE;
   /* calculate where in the memory the argv array starts */
-  esp->argv = ??? ;
+  esp->argv = YOUR_CODE_HERE;
   
   /* calculate where in the memory the words is stored */
-  cmd_line_on_stack = ??? ;
+  cmd_line_on_stack = YOUR_CODE_HERE;
 
   /* copy the command_line to where it should be in the stack */
 
@@ -242,15 +243,22 @@ int main()
   const int S = sizeof(void*);
   
   /* read one line of input, this will be the command-line */
-  printf("Mata in en mening: ");
+  printf("Enter a command line: ");
   custom_getline(line, LINE_SIZE);
   
   /* put initial content on our simulated stack */
   esp = setup_main_stack(line, simulated_stack_top);
   printf("# esp = %0*lx\n", 2*S, (unsigned long)esp);
+
+  if ( (char*)esp >= (char*)simulated_stack_top ||
+       (char*)esp < (char*)simulated_stack )
+  {
+    printf("# ERROR: esp is not inside the allocated stack\n");
+    return 1;
+  }
   
   /* dump memory area for verification */
-  dump(esp, (unsigned long)simulated_stack_top - (unsigned long)esp);
+  dump(esp, (char*)simulated_stack_top - (char*)esp);
   
   /* original command-line should not be needed anymore */
   for (i = 0; i < LINE_SIZE; ++i)
