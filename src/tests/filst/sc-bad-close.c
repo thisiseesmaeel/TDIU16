@@ -25,43 +25,43 @@ extern int _end_bss;
 
 void test_main(void)
 {
-	// Get the addres of the first unmapped page in the system.
-	unsigned page = (unsigned)pg_round_up(&_end_bss);
+    // Get the addres of the first unmapped page in the system.
+    unsigned page = (unsigned)pg_round_up(&_end_bss);
 
-	// Reserve space for 2 parameters.
-	unsigned base = page - sizeof(int) * 2;
+    // Reserve space for 2 parameters.
+    unsigned base = page - sizeof(int) * 2;
 
-	// Call write() with space for 4 parameters (should be fine).
-	asm volatile (
-		"movl %%esp, %%edi;"
-		"movl %0, %%esp;"       // Set stack pointer to right below page boundary.
-		"movl %1, (%%esp);"     // Try to call SYS_CLOSE
-		"movl $8, 4(%%esp);"    // Close fileno #8
-		"int $0x30;"
-		"movl %%edi, %%esp;"    // Restore esp.
-		:
-		: "r" (base),
-		  "i" (SYS_CLOSE)
-		: "%esp", "%eax", "%edi");
+    // Call write() with space for 4 parameters (should be fine).
+    asm volatile (
+        "movl %%esp, %%edi;"
+        "movl %0, %%esp;"       // Set stack pointer to right below page boundary.
+        "movl %1, (%%esp);"     // Try to call SYS_CLOSE
+        "movl $8, 4(%%esp);"    // Close fileno #8
+        "int $0x30;"
+        "movl %%edi, %%esp;"    // Restore esp.
+        :
+        : "r" (base),
+          "i" (SYS_CLOSE)
+        : "%esp", "%eax", "%edi");
 
 
-	write(STDOUT_FILENO, "OK\n", 3);
+    write(STDOUT_FILENO, "OK\n", 3);
 
-	// Reserve space for 1 parameter (open requires 2).
-	base = page - sizeof(int) * 1;
+    // Reserve space for 1 parameter (open requires 2).
+    base = page - sizeof(int) * 1;
 
-	// Call write() with space for 3 parameters (the kernel should kill us for doing this).
-	asm volatile (
-		"movl %%esp, %%edi;"
-		"movl %0, %%esp;"       // Set stack pointer to right below page boundary.
-		"movl %1, (%%esp);"     // Try to call SYS_CLOSE
-		// "movl $8, 4(%%esp);"    // Close fileno #8
-		"int $0x30;"
-		"movl %%edi, %%esp;"    // Restore esp in case we do not crash (as we should).
-		:
-		: "r" (base),
-		  "i" (SYS_CLOSE)
-		: "%esp", "%eax", "%edi");
+    // Call write() with space for 3 parameters (the kernel should kill us for doing this).
+    asm volatile (
+        "movl %%esp, %%edi;"
+        "movl %0, %%esp;"       // Set stack pointer to right below page boundary.
+        "movl %1, (%%esp);"     // Try to call SYS_CLOSE
+        // "movl $8, 4(%%esp);"    // Close fileno #8
+        "int $0x30;"
+        "movl %%edi, %%esp;"    // Restore esp in case we do not crash (as we should).
+        :
+        : "r" (base),
+          "i" (SYS_CLOSE)
+        : "%esp", "%eax", "%edi");
 
-	fail("should have died.");
+    fail("should have died.");
 }
