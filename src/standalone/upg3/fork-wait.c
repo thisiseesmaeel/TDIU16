@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
   }
   
   printf("P | Switch to a differen terminal.\n"
-         "P | Execute the command \"ptree $USER\".\n"
+         "P | Execute the command \"pstree $USER\".\n"
          "P | It will show a list of processes you are running.\n"
          "P | You should see the process '%s' once.\n"
          "P | Press enter when you verified that.\n\n", argv[0]);
