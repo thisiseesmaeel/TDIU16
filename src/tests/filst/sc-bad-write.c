@@ -31,7 +31,7 @@ const char *FAIL = "FAIL\n";
 
 void test_main(void)
 {
-    // Get the addres of the first unmapped page in the system.
+    // Get the address of the first unmapped page in the process.
     unsigned page = (unsigned)pg_round_up(&_end_bss);
 
     // Reserve space for 4 parameters.
@@ -44,7 +44,7 @@ void test_main(void)
         "movl %1, (%%esp);"     // Try to call SYS_WRITE
         "movl %2, 4(%%esp);"    // Write to STDOUT
         "movl %3, 8(%%esp);"    // Load buffer.
-        "movl $6, 12(%%esp);"    // Write length of string
+        "movl $6, 12(%%esp);"   // Write length of string
         "int $0x30;"
         "movl %%edi, %%esp;"    // Restore esp.
         :
