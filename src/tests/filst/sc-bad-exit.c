@@ -35,7 +35,7 @@ void test_main(void)
         "movl %%esp, %%edi;" // Save the stack pointer in case we survive.
         "movl %0, %%esp;"    // Set stack pointer.
         "movl %1, (%%esp);"  // Try to call SYS_EXIT
-        "movb $1, 4(%%esp);" // Set the first byte of the syscall number to zero.
+        "movb $1, 4(%%esp);" // Set the first byte of the syscall number to one.
         "int $0x30;"         // Trigger syscall.
         "movl %%edi, %%esp;" // Restore the old stack if we survivied.
         :
