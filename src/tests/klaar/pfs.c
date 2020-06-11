@@ -59,7 +59,7 @@ static void start_rw(int rn, int wn)
     CHECK( wait( wpid ) != -1, "wait pfs-writer %d", wpid);
 }
 
-int main (int argc, char *argv[]) 
+int main (int argc, char *argv[])
 {
   if ( argc != 3 )
     fail("usage: pfs START END");
@@ -79,5 +79,9 @@ int main (int argc, char *argv[])
   start_rw(num_reader, num_writer);
   
   msg ("end");
+
+  // Tell the system we're entirely done. Otherwise the test accepts
+  // that this process is killed for some reason (e.g. invalid syscall).
+  printf("pfs done\n");
   return 0;
 }
