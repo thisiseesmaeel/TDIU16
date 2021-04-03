@@ -52,7 +52,7 @@ void test_main(void)
           "i" (SYS_WRITE),
           "i" (STDOUT_FILENO),
           "r" (WORKS)
-        : "%esp", "%eax", "%edi");
+        : "%eax", "%edi");
 
 
     // Reserve space for 3 parameters (write requires 4).
@@ -73,7 +73,7 @@ void test_main(void)
           "i" (SYS_WRITE),
           "i" (STDOUT_FILENO),
           "r" (FAIL)
-        : "%esp", "%eax", "%edi");
+        : "%eax", "%edi");
 
     fail("should have died.");
 }
