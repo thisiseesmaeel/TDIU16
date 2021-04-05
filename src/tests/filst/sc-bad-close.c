@@ -31,7 +31,7 @@ void test_main(void)
     // Reserve space for 2 parameters.
     unsigned base = page - sizeof(int) * 2;
 
-    // Call write() with space for 4 parameters (should be fine).
+    // Call close() with space for 2 parameters (should be fine).
     asm volatile (
         "movl %%esp, %%edi;"
         "movl %0, %%esp;"       // Set stack pointer to right below page boundary.
@@ -42,7 +42,7 @@ void test_main(void)
         :
         : "r" (base),
           "i" (SYS_CLOSE)
-        : "%esp", "%eax", "%edi");
+        : "%eax", "%edi");
 
 
     write(STDOUT_FILENO, "OK\n", 3);
@@ -50,7 +50,7 @@ void test_main(void)
     // Reserve space for 1 parameter (open requires 2).
     base = page - sizeof(int) * 1;
 
-    // Call write() with space for 3 parameters (the kernel should kill us for doing this).
+    // Call close() with space for 1 parameter (the kernel should kill us for doing this).
     asm volatile (
         "movl %%esp, %%edi;"
         "movl %0, %%esp;"       // Set stack pointer to right below page boundary.
@@ -61,7 +61,7 @@ void test_main(void)
         :
         : "r" (base),
           "i" (SYS_CLOSE)
-        : "%esp", "%eax", "%edi");
+        : "%eax", "%edi");
 
     fail("should have died.");
 }

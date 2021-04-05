@@ -39,7 +39,7 @@ void test_main(void)
         "movl %%edi, %%esp;" // Restore the old stack if we survivied.
         :
         : "r" (base)
-        : "%esp", "%eax", "%edi");
+        : "%eax", "%edi");
 
     fail("should have died.");
 }

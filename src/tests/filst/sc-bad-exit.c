@@ -41,7 +41,7 @@ void test_main(void)
         :
         : "r" (base),
           "i" (SYS_EXIT)
-        : "%esp", "%eax", "%edi");
+        : "%eax", "%edi");
 
     fail("should have died.");
 }
