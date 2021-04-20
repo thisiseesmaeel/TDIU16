@@ -16,6 +16,7 @@
    DONE: Check result for JUNK
    DONE: Compare/verify content of buffer after reads.
    DONE: Make sure content of buffer is known/reset before filling it.
+   DONE: Fix verify seek past filesize
  */
 
 #include <stdio.h>
@@ -291,7 +292,9 @@ int main(int argc, char* argv[])
 
     printf ("Will try to determine filesize and seek past it\n");
     result = filesize (id);
+	/* calling seek past filesize is defined to return the position of the end of file */
     seek (id, result*2);
+	result = tell (id);
     verify ( result == SIZE );
   }
   end ( "* -------------------- press enter ---------------------- *" );
