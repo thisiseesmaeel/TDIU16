@@ -22,7 +22,7 @@
 
 /* Verify all addresses from and including 'start' up to but excluding
  * (start+length). */
-bool verify_fix_length(void* start, int length)
+bool verify_fix_length(void* start, unsigned length)
 {
   // ADD YOUR CODE HERE
 }
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     simulator_set_pagefault_time( atoi(argv[1]) );
   }
   thread_init();
-  
+
   /* Test the algorithm with a given intervall (a buffer). */
   for (i = 0; i < TEST_CASE_COUNT; ++i)
   {
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     evaluate(result);
     end_evaluate_algorithm();
   }
-    
+
   /* Test the algorithm with a C-string (start address with
    * terminating null-character).
    */
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
   {
     start_evaluate_algorithm(test_case[i].start, test_case[i].length);
     result = verify_variable_length(test_case[i].start);
-    evaluate(result);    
+    evaluate(result);
     end_evaluate_algorithm();
   }
   return 0;
