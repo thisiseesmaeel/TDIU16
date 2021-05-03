@@ -36,4 +36,6 @@ overflow
 dir_stress
 create_file
 create_remove_file
+wait_test
+slow_child
 *.d

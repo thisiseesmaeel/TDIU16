@@ -37,8 +37,8 @@ const int argc[] = {
   0, 1, 1, 1, 2, 1, 1, 1, 3, 3, 2, 1, 1, 
   /* not implemented */
   2, 1,    1, 1, 2, 1, 1,
-  /* extended */
-  0
+  /* extended, you may need to change the order of these two (plist, sleep) */
+  0, 1
 };
 
 static void
