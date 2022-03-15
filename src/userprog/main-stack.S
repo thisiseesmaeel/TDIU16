@@ -22,6 +22,7 @@ setup_main_stack_asm:
 	jne 1b
 
 
+	movl $0, %edi
 	movl $0, %esi
 1:	cmp %ecx, 8(%ebp)
 	je 9f
@@ -32,6 +33,7 @@ setup_main_stack_asm:
 
 	incl %ecx
 	incl %esi
+	incl %edi
 
 	decl %eax
 	movb $0, (%eax)
