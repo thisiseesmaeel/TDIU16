@@ -19,6 +19,7 @@ struct data_file {
 };
 
 // Håll koll på den fil vi har öppnat. Om ingen fil är öppen är denna variabel NULL.
+// Tänk er att detta är en array av två pekare, dvs. struct data_file *open_files[2];
 struct data_file **open_files;
 
 // Initiera de datastrukturer vi behöver. Anropas en gång i början.
