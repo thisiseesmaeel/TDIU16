@@ -1,8 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "map.h"
+
+
 
 /* Recommended compile commmand:
  * 
@@ -12,8 +15,6 @@
  *
  * valgrind --tool=memcheck ./a.out
  */
-#error Read comments above, then remove this line.
-
 
 /* Can be used to inform compiler about unused parameters (prevent
  * warning). Useful when a funtion pointer expect a certain set of
