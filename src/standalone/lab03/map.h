@@ -1,5 +1,4 @@
 /* do not forget the guard against multiple includes */
-
 #pragma once
 
 typedef char* value_t;
@@ -7,10 +6,8 @@ typedef int key_t;
 
 #define MAP_SIZE 128
 
-/* stores all objects in list or array */
 struct map {
     value_t content[MAP_SIZE];
-    int next_pos;
     int size;
 };
 

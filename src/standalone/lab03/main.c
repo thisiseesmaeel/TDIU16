@@ -42,10 +42,11 @@ void print_less(key_t k UNUSED, value_t v, int aux)
   {
     printf("%s ", v);
   }
+  
 }
 
 
-#define LOOPS 10
+#define LOOPS 3
 
 char* my_strdup(char* str)
 {
@@ -58,6 +59,8 @@ char* my_strdup(char* str)
   
   return dst; /*(!) return our deep copy of str */
 }
+
+
 
 int main()
 {
@@ -92,7 +95,7 @@ int main()
     obj = map_find(&container, id);
 
     /*! if it was found, display it */
-YOUR CODE
+    
   
     /* since we leave the value in the map we may use it again and
      * should not free the memory */
@@ -108,7 +111,7 @@ YOUR CODE
     obj = map_remove(&container, id);
 
     /*! if it was found, display it */
-YOUR CODE
+//YOUR CODE
     /* since we removed the value from the map we will never use it again and
      * must properly free the memory (if it was allocated) */
   }
@@ -116,10 +119,27 @@ YOUR CODE
   /*! print all strings representing an integer less than N */
   printf("Will now display all values less than N. Choose N: ");
   scanf("%d", &i);
-  map_for_each(&container, print_less, i);
+  //map_for_each(&container, print_less, i);
   
   /*! free all remaining memory and remove from map */
-  map_remove_if(&container, do_free, 0);
+  //map_remove_if(&container, do_free, 0);
+
+  // struct map *m = malloc(sizeof(struct map));
+
+  // map_init(m);
+
+  // map_insert(m, "Ahmed");
+
+  // printf("%s %s\n","Content:", m->content[0]);
+
+  // printf("%s %d\n", "Size:", m->size);
+
+  // map_insert(m, "Hadi");
+  
+  // //printf("%s\n", map_remove(m, 1));
+
+  // printf("%s %d\n", "new Size:", m->size);
+
   
   return 0;
 }
