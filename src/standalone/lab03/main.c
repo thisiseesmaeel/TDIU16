@@ -5,8 +5,6 @@
 
 #include "map.h"
 
-
-
 /* Recommended compile commmand:
  * 
  * gcc -Wall -Wextra -std=gnu99 -pedantic -g main.c map.c
@@ -24,7 +22,7 @@
 /* The code assumes that key_t is `int' and value_t is `char*' */
 
 /* function passed as parameter to map_remove_if in order to free the
- * memory for all inseted values, and return true to remove them from
+ * memory for all inserted values, and return true to remove them from
  * the map */
 bool do_free(key_t k UNUSED, value_t v, int aux UNUSED)
 {
@@ -45,7 +43,6 @@ void print_less(key_t k UNUSED, value_t v, int aux)
   
 }
 
-
 #define LOOPS 3
 
 char* my_strdup(char* str)
@@ -59,7 +56,6 @@ char* my_strdup(char* str)
   
   return dst; /*(!) return our deep copy of str */
 }
-
 
 
 int main()
@@ -95,8 +91,12 @@ int main()
     obj = map_find(&container, id);
 
     /*! if it was found, display it */
-    
   
+  //YOUR CODE
+     if(obj != NULL){
+      printf("%s\n", obj);
+    } 
+    
     /* since we leave the value in the map we may use it again and
      * should not free the memory */
   }
@@ -111,7 +111,12 @@ int main()
     obj = map_remove(&container, id);
 
     /*! if it was found, display it */
-//YOUR CODE
+  //YOUR CODE
+    if(obj != NULL){
+      printf("%s\n", obj);
+      free(obj);
+    }
+
     /* since we removed the value from the map we will never use it again and
      * must properly free the memory (if it was allocated) */
   }
@@ -119,27 +124,11 @@ int main()
   /*! print all strings representing an integer less than N */
   printf("Will now display all values less than N. Choose N: ");
   scanf("%d", &i);
-  //map_for_each(&container, print_less, i);
+  map_for_each(&container, print_less, i);
+  printf("\n");
   
   /*! free all remaining memory and remove from map */
-  //map_remove_if(&container, do_free, 0);
+  map_remove_if(&container, do_free, 0);
 
-  // struct map *m = malloc(sizeof(struct map));
-
-  // map_init(m);
-
-  // map_insert(m, "Ahmed");
-
-  // printf("%s %s\n","Content:", m->content[0]);
-
-  // printf("%s %d\n", "Size:", m->size);
-
-  // map_insert(m, "Hadi");
-  
-  // //printf("%s\n", map_remove(m, 1));
-
-  // printf("%s %d\n", "new Size:", m->size);
-
-  
   return 0;
 }
