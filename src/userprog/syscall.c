@@ -45,7 +45,8 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   int32_t* esp = (int32_t*)f->esp;
-  
+  // esp[0]  --> syscall num 
+  // esp[1]  --> param
   switch ( esp[0] /* retrive syscall number */ )
   {
     case SYS_HALT:
@@ -56,7 +57,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_EXIT:
     {
       printf ("SYSTEM EXIT is running...\n");
-      printf ("Stack top + 0: %d\n", esp[0]);
+      printf ("Stack top + 0: %d\n", esp[1]);
       thread_exit();
     } 
     

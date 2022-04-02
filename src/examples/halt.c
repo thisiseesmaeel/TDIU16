@@ -8,9 +8,10 @@
 #include <stdio.h>
 
 int
-main (void)
+main(void)
 {
-  halt ();
+  //halt();
+  exit(21);
   /* not reached */
   printf("dfasdfdsafdsafdsafasddfdsa");
   return 0;
