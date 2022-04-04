@@ -44,9 +44,10 @@ int getline(char *buf, int size)
   for (i = 0; i < size-1; ++i)
   {
     // //printf("It is buf: %s\n", &buf[i]);
-    // int test = read(STDIN_FILENO, &buf[i], 1);
-    // printf("It should be 1: %d\n", test);
-    if (read(STDIN_FILENO, &buf[i], 1) >= 1)
+    //buf[i] = 'f';
+    int test = read(STDIN_FILENO, &buf[i], 1);
+    printf("It should be 1: %d\nAnd it should be entered char: %c\n", test, buf[i]);
+    if (read(STDIN_FILENO, &buf[i], 1) != 1)
       break;
     if (buf[i] == '\n')
       break;

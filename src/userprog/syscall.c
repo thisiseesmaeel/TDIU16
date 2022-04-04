@@ -66,7 +66,16 @@ syscall_handler (struct intr_frame *f)
     case SYS_READ:
     {
       printf ("SYSTEM READ is running...\n");
-      return input_getc();
+      
+      char t = input_getc();
+      if(t != -1){
+        printf("Entered char: %c\n", t);
+        printf("buf is: %c\n", &esp[2]);
+        esp[2] = t;
+        f->eax = 1;
+        return;
+      }
+      f->eax = -1;
       break;
     }
     case SYS_WRITE:
