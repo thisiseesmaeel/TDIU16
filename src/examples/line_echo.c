@@ -17,6 +17,9 @@ int main(void)
   int length;
   char endl = '\n';
 
+  //char test_char;
+
+  //printf("It should be 1: %d\n", read(STDIN_FILENO, test_char, 1));
   for ( ; ; )
   {
     length = getline(buf, 10);
@@ -30,7 +33,7 @@ int main(void)
     write(STDOUT_FILENO, buf, length);
     write(STDOUT_FILENO, &endl, 1);
   }
-  
+
   return 0;
 }
 
@@ -40,7 +43,10 @@ int getline(char *buf, int size)
   
   for (i = 0; i < size-1; ++i)
   {
-    if (read(STDIN_FILENO, &buf[i], 1) != 1)
+    // //printf("It is buf: %s\n", &buf[i]);
+    // int test = read(STDIN_FILENO, &buf[i], 1);
+    // printf("It should be 1: %d\n", test);
+    if (read(STDIN_FILENO, &buf[i], 1) >= 1)
       break;
     if (buf[i] == '\n')
       break;
