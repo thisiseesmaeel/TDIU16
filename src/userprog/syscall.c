@@ -13,6 +13,7 @@
 #include "userprog/pagedir.h"
 #include "userprog/process.h"
 #include "devices/input.h"
+#include "../lib/kernel/console.h"
 
 static void syscall_handler (struct intr_frame *);
 
@@ -53,14 +54,28 @@ syscall_handler (struct intr_frame *f)
     {
       printf ("SYSTEM HALT is running...\n");
       power_off();
+      break;
     }
     case SYS_EXIT:
     {
       printf ("SYSTEM EXIT is running...\n");
       printf ("Stack top + 0: %d\n", esp[1]);
       thread_exit();
-    } 
-    
+      break;
+    }
+    case SYS_READ:
+    {
+      printf ("SYSTEM READ is running...\n");
+      return input_getc();
+      break;
+    }
+    case SYS_WRITE:
+    {
+      printf ("\nSYSTEM WRITE is running...\n");
+      putbuf(esp[2], esp[3]);
+      break;
+      
+    }
     default:
     {
       printf ("Executed an unknown system call!\n");
@@ -69,6 +84,8 @@ syscall_handler (struct intr_frame *f)
       printf ("Stack top + 1: %d\n", esp[1]);
       
       thread_exit ();
+      
+      break;
     }
   }
 }
