@@ -17,9 +17,6 @@ int main(void)
   int length;
   char endl = '\n';
 
-  //char test_char;
-
-  //printf("It should be 1: %d\n", read(STDIN_FILENO, test_char, 1));
   for ( ; ; )
   {
     length = getline(buf, 10);
@@ -43,10 +40,6 @@ int getline(char *buf, int size)
   
   for (i = 0; i < size-1; ++i)
   {
-    // //printf("It is buf: %s\n", &buf[i]);
-    //buf[i] = 'f';
-    int test = read(STDIN_FILENO, &buf[i], 1);
-    printf("It should be 1: %d\nAnd it should be entered char: %c\n", test, buf[i]);
     if (read(STDIN_FILENO, &buf[i], 1) != 1)
       break;
     if (buf[i] == '\n')

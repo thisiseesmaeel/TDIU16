@@ -56,6 +56,7 @@ syscall_handler (struct intr_frame *f)
       power_off();
       break;
     }
+    
     case SYS_EXIT:
     {
       printf ("SYSTEM EXIT is running...\n");
@@ -63,21 +64,29 @@ syscall_handler (struct intr_frame *f)
       thread_exit();
       break;
     }
+    
     case SYS_READ:
     {
       printf ("SYSTEM READ is running...\n");
-      
-      char t = input_getc();
-      if(t != -1){
-        printf("Entered char: %c\n", t);
-        printf("buf is: %c\n", &esp[2]);
-        esp[2] = t;
-        f->eax = 1;
-        return;
+
+      int read_char = 0;
+      char input_char;
+
+      for (int i = 0; i < esp[3]; i++)
+      {
+        input_char = input_getc();
+        if (input_char != -1)
+        {
+          char *buffer = esp[2];
+          buffer[i] = input_char;
+          read_char++;
+        }
       }
-      f->eax = -1;
+      
+      f->eax = read_char;
       break;
     }
+    
     case SYS_WRITE:
     {
       printf ("\nSYSTEM WRITE is running...\n");
