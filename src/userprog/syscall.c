@@ -59,16 +59,12 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_EXIT:
     {
-      printf ("SYSTEM EXIT is running...\n");
-      printf ("Stack top + 0: %d\n", esp[1]);
       thread_exit();
       break;
     }
     
     case SYS_READ:
     {
-      printf ("SYSTEM READ is running...\n");
-
       int read_char = 0;
       char input_char;
 
@@ -91,7 +87,6 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_WRITE:
     {
-      printf ("\nSYSTEM WRITE is running...\n");
       putbuf(esp[2], esp[3]);
       break;
       
