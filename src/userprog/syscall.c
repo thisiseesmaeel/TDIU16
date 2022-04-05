@@ -77,6 +77,8 @@ syscall_handler (struct intr_frame *f)
         input_char = input_getc();
         if (input_char != -1)
         {
+          if(input_char == '\r')
+            input_char = '\n';
           char *buffer = esp[2];
           buffer[i] = input_char;
           read_char++;
