@@ -14,7 +14,7 @@
 #include "userprog/process.h"
 #include "devices/input.h"
 #include "../lib/kernel/console.h"
-
+#include "userprog/flist.h"
 static void syscall_handler (struct intr_frame *);
 
 void
@@ -67,7 +67,7 @@ syscall_handler (struct intr_frame *f)
     {
       int read_char = 0;
       char input_char;
-
+// if sats för esp[1] för att läsa från filen
       for (int i = 0; i < esp[3]; i++)
       {
         input_char = input_getc();
@@ -91,6 +91,51 @@ syscall_handler (struct intr_frame *f)
       break;
       
     }
+
+    /*
+    int main() {
+      create("test", 12); 
+      int fd = open("test"); 
+      write(fd, "Hello World!", 12); 
+      close(fd); 
+      return 0;
+    }
+    */
+
+    case SYS_CREATE:
+    {
+      f->eax = false;
+      
+      if(filesys_create(esp[1], esp[2])){
+        
+        f->eax = true;
+      }
+      break;
+    }
+
+    case SYS_OPEN:
+    {
+      struct file* file_ptr;
+      file_ptr = filesys_open(esp[1]);
+
+      if(file_ptr == NULL)
+      {
+        printf("What are you doing?? File does not exist!");
+        printf("\n");
+        f->eax = -1;
+      }else{
+        struct thread* current_thread = thread_current();
+        f->eax = file_insert(&(current_thread->file_table), esp[1]);
+      }
+      break;
+    }
+
+    case SYS_CLOSE:
+    {
+      
+      break;
+    }
+
     default:
     {
       printf ("Executed an unknown system call!\n");

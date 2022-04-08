@@ -95,6 +95,9 @@ struct thread
     struct list_elem elem;              /* List element. */
 
     /* YES! You may want to add stuff. But make note of point 2 above. */
+    struct file file_table;
+   
+
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */

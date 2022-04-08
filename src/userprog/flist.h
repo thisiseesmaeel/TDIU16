@@ -1,5 +1,5 @@
-#ifndef _MAP_H_
-#define _MAP_H_
+#ifndef _FILE_H_
+#define _FILE_H_
 
 /* Place code to keep track of your per-process open file table here.
  *
@@ -63,5 +63,36 @@
  * where to declare and initialize it correctly. In both cases, consider
  * what size limit that may be appropriate.
  */
+
+/* do not forget the guard against multiple includes */
+#include <stdbool.h>
+
+#pragma once
+
+typedef char* value_t;
+typedef int key_t;
+
+#define FILE_SIZE 128
+
+struct file {
+    value_t content[FILE_SIZE];
+    int size;
+};
+
+void file_init(struct file* m);
+
+key_t file_insert(struct file* m, value_t v);
+
+value_t file_find(struct file* m, key_t k);
+
+value_t file_remove(struct file* m, key_t k);
+
+void file_for_each(struct file* m,
+    void (*exec)(key_t k, value_t v, int aux),
+    int aux);
+
+void file_remove_if(struct file* m,
+    bool (*cond)(key_t k, value_t v, int aux),
+    int aux);
 
 #endif
