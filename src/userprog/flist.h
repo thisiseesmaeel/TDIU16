@@ -1,5 +1,5 @@
-#ifndef _FILE_H_
-#define _FILE_H_
+#ifndef USERPROG_FLIST_H
+#define USERPROG_FLIST_H
 
 /* Place code to keep track of your per-process open file table here.
  *
@@ -66,33 +66,45 @@
 
 /* do not forget the guard against multiple includes */
 #include <stdbool.h>
+#include "filesys/filesys.h"
+#include "filesys/file.h"
+
 
 #pragma once
 
-typedef char* value_t;
+/* An open file. */
+struct file 
+  {
+    struct inode *inode;        /* File's inode. */
+    off_t pos;                  /* Current position. */
+  };
+
+typedef struct file* value_t;
 typedef int key_t;
 
-#define FILE_SIZE 128
+#define FILE_TABLE_SIZE 128
 
-struct file {
-    value_t content[FILE_SIZE];
+struct file_table {
+    value_t content[FILE_TABLE_SIZE];
     int size;
 };
 
-void file_init(struct file* m);
+void file_table_init(struct file_table* m);
 
-key_t file_insert(struct file* m, value_t v);
+key_t file_table_insert(struct file_table* m, value_t v);
 
-value_t file_find(struct file* m, key_t k);
+value_t file_table_find(struct file_table* m, key_t k);
 
-value_t file_remove(struct file* m, key_t k);
+value_t file_table_remove(struct file_table* m, key_t k);
 
-void file_for_each(struct file* m,
+void file_table_for_each(struct file_table* m,
     void (*exec)(key_t k, value_t v, int aux),
     int aux);
 
-void file_remove_if(struct file* m,
+void file_table_remove_if(struct file_table* m,
     bool (*cond)(key_t k, value_t v, int aux),
     int aux);
+
+key_t file_table_find_file(struct file_table* m, value_t* f);
 
 #endif

@@ -17,6 +17,7 @@
 #include "userprog/flist.h"
 static void syscall_handler (struct intr_frame *);
 
+
 void
 syscall_init (void) 
 {
@@ -65,16 +66,18 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_READ:
     {
+      // if sats för esp[1] för att läsa från filen
       int read_char = 0;
       char input_char;
-// if sats för esp[1] för att läsa från filen
       for (int i = 0; i < esp[3]; i++)
       {
         input_char = input_getc();
         if (input_char != -1)
         {
           if(input_char == '\r')
+          {
             input_char = '\n';
+          }
           char *buffer = esp[2];
           buffer[i] = input_char;
           read_char++;
@@ -87,9 +90,29 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_WRITE:
     {
-      putbuf(esp[2], esp[3]);
+      if (esp[1] == STDIN_FILENO)
+      {
+        f->eax = -1; // Det går inte att skriva till STDIN
+      }
+      else if(esp[1] == STDOUT_FILENO)
+      {
+        putbuf(esp[2], esp[3]);
+      }
+      else  // Vi ska skriva till fil
+      {       
+        struct thread* current_thread = thread_current();
+        struct file *file = file_table_find(&(current_thread->file_table), esp[1]);
+        if( file != NULL)
+        {
+          f->eax = file_write(file, esp[2], esp[3]);
+        }
+        else
+        {
+          f->eax = -1;
+        }
+      }
+
       break;
-      
     }
 
     /*
@@ -105,9 +128,15 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:
     {
       f->eax = false;
-      
-      if(filesys_create(esp[1], esp[2])){
-        
+      if(filesys_create(esp[1], esp[2]))
+      {
+/*         struct thread* current_thread = thread_current(); //Kolla vilken tråd den är 
+        //Om den hittar plats i filtabellen
+        if(file_table_insert(&(current_thread->file_table), esp[1]))
+        {
+          f->eax = true;
+        } */
+
         f->eax = true;
       }
       break;
@@ -120,12 +149,12 @@ syscall_handler (struct intr_frame *f)
 
       if(file_ptr == NULL)
       {
-        printf("What are you doing?? File does not exist!");
-        printf("\n");
         f->eax = -1;
-      }else{
+      }
+      else
+      {
         struct thread* current_thread = thread_current();
-        f->eax = file_insert(&(current_thread->file_table), esp[1]);
+        f->eax = file_table_insert(&(current_thread->file_table), file_ptr);
       }
       break;
     }

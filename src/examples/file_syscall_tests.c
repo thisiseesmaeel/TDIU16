@@ -102,6 +102,7 @@ int main(int argc, char* argv[])
 
     printf ("Will try to create 'test.txt'\n");
     success = create("test.txt", SIZE);
+
     verify ( success != JUNK && success );
   }
   end ( "* -------------------- press enter ---------------------- *" );
@@ -109,18 +110,12 @@ int main(int argc, char* argv[])
 
   msg ( "* ------------------ open file test --------------------- *" );
   {
-    printf ("Will try to open 'non_existent_file'\n");
-    id = open("non_existent_file");
-    ///////////////////////////////////////////////
-    printf( "%d\n", id);
-    ///////////////////////////////////////////////
-    verify ( id == -1 );
+     printf ("Will try to open 'non_existent_file'\n");
+     id = open("non_existent_file");
+     verify ( id == -1 );
 
     printf ("Will try to open 'test.txt'\n");
     id = open("test.txt");
-    ///////////////////////////////////////////////
-    printf( "%d\n", id);
-    ///////////////////////////////////////////////
     verify ( id > 1 );
   }
   end ( "* -------------------- press enter ---------------------- *" );
