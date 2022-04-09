@@ -185,7 +185,7 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_REMOVE:
     {
-
+      f->eax = filesys_remove(esp[1]);
       break;
     }
 
