@@ -34,6 +34,7 @@ key_t file_table_insert(struct file_table* m, value_t v){
 
 value_t file_table_find(struct file_table* m, key_t k){
     key_t index = k - OFFSET;
+
     if(m -> content[index] == NULL){
         return NULL;
     }
@@ -46,7 +47,7 @@ value_t file_table_remove(struct file_table* m, key_t k){
     if(result == NULL){
         return NULL;
     }
-    m->content[k] = NULL;
+    m->content[k - OFFSET] = NULL;
     m->size--;
 
     return result;

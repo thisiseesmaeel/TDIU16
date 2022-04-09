@@ -66,25 +66,46 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_READ:
     {
-      // if sats för esp[1] för att läsa från filen
       int read_char = 0;
       char input_char;
-      for (int i = 0; i < esp[3]; i++)
+
+      if (esp[1] == STDIN_FILENO)
       {
-        input_char = input_getc();
-        if (input_char != -1)
+        for (int i = 0; i < esp[3]; i++)
         {
-          if(input_char == '\r')
+          input_char = input_getc();
+          if (input_char != -1)
           {
-            input_char = '\n';
+            if (input_char == '\r')
+            {
+              input_char = '\n';
+            }
+            char *buffer = esp[2];
+            buffer[i] = input_char;
+            read_char++;
+            
+            f->eax = read_char;
           }
-          char *buffer = esp[2];
-          buffer[i] = input_char;
-          read_char++;
         }
       }
-      
-      f->eax = read_char;
+      else if(esp[1] == STDOUT_FILENO)
+      {
+        f->eax = -1;
+      }
+      else
+      {
+        struct thread* current_thread = thread_current();
+        struct file *file = file_table_find(&(current_thread->file_table), esp[1]);
+        if( file != NULL )
+        {
+          f->eax = file_read(file, esp[2], esp[3]);
+        }
+        else
+        {
+          f->eax = -1;
+        }
+      }
+
       break;
     }
     
@@ -114,16 +135,6 @@ syscall_handler (struct intr_frame *f)
 
       break;
     }
-
-    /*
-    int main() {
-      create("test", 12); 
-      int fd = open("test"); 
-      write(fd, "Hello World!", 12); 
-      close(fd); 
-      return 0;
-    }
-    */
 
     case SYS_CREATE:
     {
@@ -161,7 +172,20 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_CLOSE:
     {
-      
+      struct thread* current_thread = thread_current();
+      struct file* file_ptr = file_table_find(&(current_thread->file_table), esp[1]);
+
+      if(file_ptr != NULL && esp[1] > 1)
+      {
+        file_table_remove(&(current_thread->file_table), esp[1]);
+        file_close(file_ptr);
+      }
+      break;
+    }
+
+    case SYS_REMOVE:
+    {
+
       break;
     }
 

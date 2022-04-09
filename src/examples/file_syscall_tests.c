@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syscall.h>
+#include <stdbool.h>
 
 #define SIZE 1024
 #define JUNK 0xCCCC /* 52428 */
