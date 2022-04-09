@@ -189,6 +189,50 @@ syscall_handler (struct intr_frame *f)
       break;
     }
 
+    case SYS_SEEK:
+    {
+      struct thread* current_thread = thread_current();
+      struct file* file_ptr = file_table_find(&(current_thread->file_table), esp[1]);
+      
+      if(file_ptr != NULL)
+      {
+        off_t length = file_length(file_ptr);
+        if(esp[2] > length){
+          file_seek(file_ptr, length);  
+        }
+        else{
+          file_seek(file_ptr, esp[2]);
+        }
+
+      }
+      break;
+    }
+
+    case SYS_TELL:
+    {
+      f->eax = -1;
+      struct thread* current_thread = thread_current();
+      struct file* file_ptr = file_table_find(&(current_thread->file_table), esp[1]);
+      
+      if(file_ptr != NULL)
+      {
+        f->eax = file_tell(file_ptr);
+      }
+      break;
+    }
+
+    case SYS_FILESIZE:
+    {
+      f->eax = -1;
+      struct thread* current_thread = thread_current();
+      struct file* file_ptr = file_table_find(&(current_thread->file_table), esp[1]);
+
+      if(file_ptr != NULL){
+        f->eax = file_length(file_ptr);
+      }
+      break;
+    }
+
     default:
     {
       printf ("Executed an unknown system call!\n");

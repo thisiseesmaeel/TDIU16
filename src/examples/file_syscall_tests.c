@@ -272,6 +272,7 @@ int main(int argc, char* argv[])
       }
       result = write(STDOUT_FILENO, "\n", 1);
     }
+
     verify ( success );
 
     printf ("Will try to read the sequence from '%d'\n", id);
