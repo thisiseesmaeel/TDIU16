@@ -8,7 +8,7 @@
 #include <filesys/file.h>
 
 
-const OFFSET = 2;
+const int OFFSET = 2;
 
 
 void file_table_init(struct file_table *m){
@@ -23,13 +23,16 @@ key_t file_table_insert(struct file_table* m, value_t v){
         return -1;
     }
 
+    int index = 0;
     for(int i = 0; i < FILE_TABLE_SIZE; i++){
         if(m->content[i] == NULL){
             m->content[i] = v;
             m->size ++;
-            return i + OFFSET;
+            index = i;
+            break;
         }
     }
+    return index + OFFSET;
 }
 
 value_t file_table_find(struct file_table* m, key_t k){
@@ -75,12 +78,3 @@ void file_table_remove_if(struct file_table* m,
             }
         }
     }
-
-key_t file_table_find_file(struct file_table* m, value_t* f){
-    for(int i = 0; i < FILE_TABLE_SIZE; i++){
-        if(m->content[i] == f){
-            return i + OFFSET;
-        }
-    }
-    return -1;
-}

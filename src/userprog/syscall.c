@@ -17,6 +17,8 @@
 #include "userprog/flist.h"
 static void syscall_handler (struct intr_frame *);
 
+struct file* retrieve_file(int32_t );
+
 
 void
 syscall_init (void) 
@@ -47,8 +49,8 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   int32_t* esp = (int32_t*)f->esp;
-  // esp[0]  --> syscall num 
-  // esp[1]  --> param
+  // esp[0]  --> syscall number
+  // esp[1]  --> param number 1
   switch ( esp[0] /* retrive syscall number */ )
   {
     case SYS_HALT:
@@ -66,71 +68,50 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_READ:
     {
-      int read_char = 0;
-      char input_char;
+      f->eax = -1;  // As default result is -1
 
-      if (esp[1] == STDIN_FILENO)
+      if (esp[1] == STDIN_FILENO) // Reading from standard input (keyboard)
       {
+        int read_char_counter = 0;
+        char input_char;
         for (int i = 0; i < esp[3]; i++)
         {
           input_char = input_getc();
           if (input_char != -1)
           {
             if (input_char == '\r')
-            {
               input_char = '\n';
-            }
-            char *buffer = esp[2];
+
+            char *buffer = (char *)esp[2];
             buffer[i] = input_char;
-            read_char++;
-            
-            f->eax = read_char;
+            read_char_counter++;
           }
         }
+        f->eax = read_char_counter;
       }
-      else if(esp[1] == STDOUT_FILENO)
+      else if(esp[1] > 1) // Reading from a file
       {
-        f->eax = -1;
+        struct file *file_ptr= retrieve_file(esp[1]);
+        if (file_ptr != NULL)
+          f->eax = file_read(file_ptr, (char *)esp[2], esp[3]);
       }
-      else
-      {
-        struct thread* current_thread = thread_current();
-        struct file *file = file_table_find(&(current_thread->file_table), esp[1]);
-        if( file != NULL )
-        {
-          f->eax = file_read(file, esp[2], esp[3]);
-        }
-        else
-        {
-          f->eax = -1;
-        }
-      }
-
       break;
     }
     
     case SYS_WRITE:
     {
-      if (esp[1] == STDIN_FILENO)
+      f->eax = -1; // As defult returns -1
+
+      if(esp[1] == STDOUT_FILENO) // Writing to standard output (terminal)
       {
-        f->eax = -1; // Det går inte att skriva till STDIN
+        putbuf((char *)esp[2], esp[3]);
+        f->eax = esp[3];
       }
-      else if(esp[1] == STDOUT_FILENO)
+      else if(esp[1] > 1) // Writing to a file
       {
-        putbuf(esp[2], esp[3]);
-      }
-      else  // Vi ska skriva till fil
-      {       
-        struct thread* current_thread = thread_current();
-        struct file *file = file_table_find(&(current_thread->file_table), esp[1]);
-        if( file != NULL)
-        {
-          f->eax = file_write(file, esp[2], esp[3]);
-        }
-        else
-        {
-          f->eax = -1;
-        }
+        struct file *file_ptr= retrieve_file(esp[1]);
+        if( file_ptr != NULL)
+          f->eax = file_write(file_ptr, (char *)esp[2], esp[3]);
       }
 
       break;
@@ -139,29 +120,19 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:
     {
       f->eax = false;
-      if(filesys_create(esp[1], esp[2]))
-      {
-/*         struct thread* current_thread = thread_current(); //Kolla vilken tråd den är 
-        //Om den hittar plats i filtabellen
-        if(file_table_insert(&(current_thread->file_table), esp[1]))
-        {
-          f->eax = true;
-        } */
-
+      
+      if(filesys_create((char *)esp[1], esp[2]))
         f->eax = true;
-      }
+      
       break;
     }
 
     case SYS_OPEN:
     {
-      struct file* file_ptr;
-      file_ptr = filesys_open(esp[1]);
+      struct file* file_ptr = filesys_open((char *)esp[1]);
 
       if(file_ptr == NULL)
-      {
         f->eax = -1;
-      }
       else
       {
         struct thread* current_thread = thread_current();
@@ -173,7 +144,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_CLOSE:
     {
       struct thread* current_thread = thread_current();
-      struct file* file_ptr = file_table_find(&(current_thread->file_table), esp[1]);
+      struct file* file_ptr = retrieve_file(esp[1]);
 
       if(file_ptr != NULL && esp[1] > 1)
       {
@@ -185,25 +156,21 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_REMOVE:
     {
-      f->eax = filesys_remove(esp[1]);
+      f->eax = filesys_remove((char *)esp[1]);
       break;
     }
 
     case SYS_SEEK:
     {
-      struct thread* current_thread = thread_current();
-      struct file* file_ptr = file_table_find(&(current_thread->file_table), esp[1]);
+      struct file* file_ptr = retrieve_file(esp[1]);
       
       if(file_ptr != NULL)
       {
         off_t length = file_length(file_ptr);
-        if(esp[2] > length){
+        if(esp[2] > length)
           file_seek(file_ptr, length);  
-        }
-        else{
+        else
           file_seek(file_ptr, esp[2]);
-        }
-
       }
       break;
     }
@@ -224,8 +191,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_FILESIZE:
     {
       f->eax = -1;
-      struct thread* current_thread = thread_current();
-      struct file* file_ptr = file_table_find(&(current_thread->file_table), esp[1]);
+      struct file* file_ptr = retrieve_file(esp[1]);
 
       if(file_ptr != NULL){
         f->eax = file_length(file_ptr);
@@ -245,4 +211,10 @@ syscall_handler (struct intr_frame *f)
       break;
     }
   }
+}
+
+struct file* retrieve_file(int32_t fd)
+{
+  struct thread *current_thread = thread_current();
+  return file_table_find(&(current_thread->file_table), fd);
 }
