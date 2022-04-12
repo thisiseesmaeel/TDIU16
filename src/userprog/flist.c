@@ -81,7 +81,9 @@ void file_table_remove_if(struct file_table* ft,
 
 void file_table_close(struct file_table* ft){
   for(int i = 0; i < ft->size; i++){
-      file_close(ft->content[i]);
-      ft->content[i] = NULL;
+      if(ft->content[i] != NULL){
+        file_close(ft->content[i]);
+        ft->content[i] = NULL;
+      }
   }
 }
