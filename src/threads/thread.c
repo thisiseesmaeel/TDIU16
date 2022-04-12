@@ -306,9 +306,14 @@ thread_tid (void)
 /* Deschedules the current thread and destroys it.  Never
    returns to the caller. */
 void
-thread_exit (void) 
+thread_exit (void)
 {
-  ASSERT (!intr_context ());
+  ///////////////////////////////////////////////////////////////////////////////
+  // If a process crashes we need to empty its table
+  struct thread *current_thread = thread_current();
+  file_table_empty(&(current_thread->file_table));
+  ///////////////////////////////////////////////////////////////////////////////
+  ASSERT(!intr_context());
   DEBUG_thread_count_down();
 
 #ifdef USERPROG

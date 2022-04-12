@@ -6,10 +6,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <filesys/file.h>
+//#define UNUSED(x) (void)(x)
 
 
 const int OFFSET = 2;
-
 
 void file_table_init(struct file_table *m){
     for(int i = 0; i < FILE_TABLE_SIZE; i++){
@@ -57,24 +57,30 @@ value_t file_table_remove(struct file_table* m, key_t k){
 }
 
 void file_table_for_each(struct file_table* m,
-    void (*exec)(key_t k, value_t v, int aux),
-    int aux){
-            for(int i = 0; i < FILE_TABLE_SIZE; i++){
-                value_t temp = file_table_find(m, i);
-                if( temp != NULL){
-                    exec(i, temp, aux);
-                }
-            }
-    }
+                        void (*exec)(key_t k, value_t v, int aux),
+                        int aux){
+                            for(int i = 0; i < FILE_TABLE_SIZE; i++){
+                                value_t temp = file_table_find(m, i);
+                                if( temp != NULL){
+                                    (*exec)(i, temp, aux);
+                                }
+                            }
+                        }
 
 void file_table_remove_if(struct file_table* m,
-    bool (*cond)(key_t k, value_t v, int aux),
-    int aux){
-        for(int i = 0; i < FILE_TABLE_SIZE; i++){
-            value_t temp = file_table_find(m, i);
-            bool condition = cond(i, temp, aux);
-            if( condition){
-                file_table_remove(m, i);
-            }
-        }
-    }
+                        bool (*cond)(key_t k, value_t v, int aux),
+                        int aux){
+                            for(int i = 0; i < FILE_TABLE_SIZE; i++){
+                                value_t temp = file_table_find(m, i);
+                                bool condition = cond(i, temp, aux);
+                                if( condition){
+                                    file_table_remove(m, i);
+                                }
+                            }
+                        }
+
+void file_table_empty(struct file_table* f){
+  for(int i = 0; i < f->size; i++){
+    f->content[i] = NULL;
+  }
+}

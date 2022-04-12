@@ -55,7 +55,6 @@ syscall_handler (struct intr_frame *f)
   {
     case SYS_HALT:
     {
-      printf ("SYSTEM HALT is running...\n");
       power_off();
       break;
     }
@@ -85,6 +84,7 @@ syscall_handler (struct intr_frame *f)
             char *buffer = (char *)esp[2];
             buffer[i] = input_char;
             read_char_counter++;
+            putchar((int)input_char);
           }
         }
         f->eax = read_char_counter;
@@ -137,6 +137,9 @@ syscall_handler (struct intr_frame *f)
       {
         struct thread* current_thread = thread_current();
         f->eax = file_table_insert(&(current_thread->file_table), file_ptr);
+        if(!f->eax){ // Close the file if it cannot add it to process table
+          file_close(file_ptr);
+        }
       }
       break;
     }

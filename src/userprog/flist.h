@@ -97,14 +97,16 @@ value_t file_table_find(struct file_table* m, key_t k);
 
 value_t file_table_remove(struct file_table* m, key_t k);
 
-void file_table_for_each(struct file_table* m,
-    void (*exec)(key_t k, value_t v, int aux),
-    int aux);
-
 void file_table_remove_if(struct file_table* m,
-    bool (*cond)(key_t k, value_t v, int aux),
-    int aux);
+                          bool (*cond)(key_t k, value_t v, int aux),
+                          int aux);
+
+void file_table_for_each(struct file_table *m,
+                         void (*exec)(key_t k, value_t v, int aux),
+                         int aux);
 
 key_t file_table_find_file(struct file_table* m, value_t* f);
+
+void file_table_empty(struct file_table* f);
 
 #endif
