@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
   int id = JUNK;
   int i, j;
 
-/*   msg ( "* ------------------ write screen test ------------------ *" );
+   msg ( "* ------------------ write screen test ------------------ *" );
   {
     char* msg = "Now displaying the arguments to main\n";
     int length = strlen (msg);
@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
   }
   end ( "* -------------------- press enter ---------------------- *" );
  
-  */
+  
   msg ( "* ------------------ create file test ------------------- *" );
   {
     int success = JUNK;
