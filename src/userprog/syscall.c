@@ -67,7 +67,7 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_READ:
     {
-      f->eax = -1;  // As default result is -1
+      f->eax = -1;  // As default returns -1
 
       if (esp[1] == STDIN_FILENO) // Reading from standard input (keyboard)
       {
@@ -137,9 +137,9 @@ syscall_handler (struct intr_frame *f)
       {
         struct thread* current_thread = thread_current();
         f->eax = file_table_insert(&(current_thread->file_table), file_ptr);
-        if(!f->eax){ // Close the file if it cannot add it to process table
+
+        if((int)f->eax == -1) // Close the file if it cannot add it to process table
           file_close(file_ptr);
-        }
       }
       break;
     }

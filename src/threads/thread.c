@@ -309,9 +309,9 @@ void
 thread_exit (void)
 {
   ///////////////////////////////////////////////////////////////////////////////
-  // If a process crashes we need to empty its table
+  // If a process crashes we need to empty its table and close all opened files
   struct thread *current_thread = thread_current();
-  file_table_empty(&(current_thread->file_table));
+  file_table_close(&(current_thread->file_table));
   ///////////////////////////////////////////////////////////////////////////////
   ASSERT(!intr_context());
   DEBUG_thread_count_down();

@@ -89,24 +89,24 @@ struct file_table {
     int size;
 };
 
-void file_table_init(struct file_table* m);
+void file_table_init(struct file_table* ft);
 
-key_t file_table_insert(struct file_table* m, value_t v);
+key_t file_table_insert(struct file_table* ft, value_t v);
 
-value_t file_table_find(struct file_table* m, key_t k);
+value_t file_table_find(struct file_table* ft, key_t k);
 
-value_t file_table_remove(struct file_table* m, key_t k);
+value_t file_table_remove(struct file_table* ft, key_t k);
 
-void file_table_remove_if(struct file_table* m,
+void file_table_remove_if(struct file_table* ft,
                           bool (*cond)(key_t k, value_t v, int aux),
                           int aux);
 
-void file_table_for_each(struct file_table *m,
+void file_table_for_each(struct file_table* ft,
                          void (*exec)(key_t k, value_t v, int aux),
                          int aux);
 
-key_t file_table_find_file(struct file_table* m, value_t* f);
+key_t file_table_find_file(struct file_table* ft, value_t* f);
 
-void file_table_empty(struct file_table* f);
+void file_table_close(struct file_table* ft); // Empty its table and close all opened files
 
 #endif
