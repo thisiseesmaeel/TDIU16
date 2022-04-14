@@ -9,19 +9,20 @@ struct file
     struct inode *inode;        /* File's inode. */
     off_t pos;                  /* Current position. */
   };
+  
+
 
 /* Opens a file for the given INODE, of which it takes ownership,
    and returns the new file.  Returns a null pointer if an
    allocation fails or if INODE is null. */
 struct file *
 file_open (struct inode *inode) 
-{
+{ 
   struct file *file = calloc (1, sizeof *file);
   if (inode != NULL && file != NULL)
     {
       file->inode = inode;
       file->pos = 0;
-
       return file;
     }
   else

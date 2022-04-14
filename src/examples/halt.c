@@ -5,10 +5,14 @@
    Just invokes a system call that shuts down the OS. */
 
 #include <syscall.h>
+#include <stdio.h>
 
 int
-main (void)
+main(void)
 {
-  halt ();
+  //halt();
+  exit(21);
   /* not reached */
+  printf("dfasdfdsafdsafdsafasddfdsa");
+  return 0;
 }

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "map.h"
 
@@ -12,8 +13,6 @@
  *
  * valgrind --tool=memcheck ./a.out
  */
-#error Read comments above, then remove this line.
-
 
 /* Can be used to inform compiler about unused parameters (prevent
  * warning). Useful when a funtion pointer expect a certain set of
@@ -23,7 +22,7 @@
 /* The code assumes that key_t is `int' and value_t is `char*' */
 
 /* function passed as parameter to map_remove_if in order to free the
- * memory for all inseted values, and return true to remove them from
+ * memory for all inserted values, and return true to remove them from
  * the map */
 bool do_free(key_t k UNUSED, value_t v, int aux UNUSED)
 {
@@ -41,10 +40,10 @@ void print_less(key_t k UNUSED, value_t v, int aux)
   {
     printf("%s ", v);
   }
+  
 }
 
-
-#define LOOPS 10
+#define LOOPS 3
 
 char* my_strdup(char* str)
 {
@@ -57,6 +56,7 @@ char* my_strdup(char* str)
   
   return dst; /*(!) return our deep copy of str */
 }
+
 
 int main()
 {
@@ -91,8 +91,12 @@ int main()
     obj = map_find(&container, id);
 
     /*! if it was found, display it */
-YOUR CODE
   
+  //YOUR CODE
+     if(obj != NULL){
+      printf("%s\n", obj);
+    } 
+    
     /* since we leave the value in the map we may use it again and
      * should not free the memory */
   }
@@ -107,7 +111,12 @@ YOUR CODE
     obj = map_remove(&container, id);
 
     /*! if it was found, display it */
-YOUR CODE
+  //YOUR CODE
+    if(obj != NULL){
+      printf("%s\n", obj);
+      free(obj);
+    }
+
     /* since we removed the value from the map we will never use it again and
      * must properly free the memory (if it was allocated) */
   }
@@ -116,9 +125,10 @@ YOUR CODE
   printf("Will now display all values less than N. Choose N: ");
   scanf("%d", &i);
   map_for_each(&container, print_less, i);
+  printf("\n");
   
   /*! free all remaining memory and remove from map */
   map_remove_if(&container, do_free, 0);
-  
+
   return 0;
 }

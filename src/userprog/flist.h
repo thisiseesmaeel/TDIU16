@@ -1,5 +1,5 @@
-#ifndef _MAP_H_
-#define _MAP_H_
+#ifndef USERPROG_FLIST_H
+#define USERPROG_FLIST_H
 
 /* Place code to keep track of your per-process open file table here.
  *
@@ -63,5 +63,50 @@
  * where to declare and initialize it correctly. In both cases, consider
  * what size limit that may be appropriate.
  */
+
+/* do not forget the guard against multiple includes */
+#include <stdbool.h>
+#include "filesys/filesys.h"
+#include "filesys/file.h"
+
+
+#pragma once
+
+/* An open file. */
+struct file 
+  {
+    struct inode *inode;        /* File's inode. */
+    off_t pos;                  /* Current position. */
+  };
+
+typedef struct file* value_t;
+typedef int key_t;
+
+#define FILE_TABLE_SIZE 128
+
+struct file_table {
+    value_t content[FILE_TABLE_SIZE];
+    int size;
+};
+
+void file_table_init(struct file_table* ft);
+
+key_t file_table_insert(struct file_table* ft, value_t v);
+
+value_t file_table_find(struct file_table* ft, key_t k);
+
+value_t file_table_remove(struct file_table* ft, key_t k);
+
+void file_table_remove_if(struct file_table* ft,
+                          bool (*cond)(key_t k, value_t v, int aux),
+                          int aux);
+
+void file_table_for_each(struct file_table* ft,
+                         void (*exec)(key_t k, value_t v, int aux),
+                         int aux);
+
+key_t file_table_find_file(struct file_table* ft, value_t* f);
+
+void file_table_close(struct file_table* ft); // Empty its table and close all opened files
 
 #endif

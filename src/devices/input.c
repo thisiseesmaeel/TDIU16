@@ -37,7 +37,7 @@ input_getc (void)
   key = intq_getc (&buffer);
   serial_notify ();
   intr_set_level (old_level);
-  
+
   return key;
 }
 

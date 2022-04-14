@@ -115,6 +115,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
   /* YES! You may want add stuff here. */
+  file_table_init(&(t -> file_table));
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -305,9 +306,14 @@ thread_tid (void)
 /* Deschedules the current thread and destroys it.  Never
    returns to the caller. */
 void
-thread_exit (void) 
+thread_exit (void)
 {
-  ASSERT (!intr_context ());
+  ///////////////////////////////////////////////////////////////////////////////
+  // If a process crashes we need to empty its table and close all opened files
+  struct thread *current_thread = thread_current();
+  file_table_close(&(current_thread->file_table));
+  ///////////////////////////////////////////////////////////////////////////////
+  ASSERT(!intr_context());
   DEBUG_thread_count_down();
 
 #ifdef USERPROG
