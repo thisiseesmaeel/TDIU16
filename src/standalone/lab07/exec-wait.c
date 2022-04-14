@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <semaphore.h>
+
 
 // Funktionen vi vill köra parallellt. Den finns definierad senare i filen.
 int do_work(int param);
@@ -18,11 +20,15 @@ struct running_thread {
 
   // Om tråden är klar: Resultatet som "do_work" har beräknat.
   int result;
+
+  struct semaphore sema;
+
 };
 
 // Första funktionen som körs i nya trådar.
 void thread_main(struct running_thread *data) {
   data->result = do_work(data->param);
+  sema_up(&(data->sema));
 }
 
 // Starta en ny tråd som kör funktionen "do_work" med "param" som
@@ -32,6 +38,8 @@ void thread_main(struct running_thread *data) {
 struct running_thread *exec(int param) {
   // Allokera en ny struktur för att hålla reda på tråden och initiera den.
   struct running_thread *data = malloc(sizeof(struct running_thread));
+  sema_init(&(data->sema), 0);
+
   data->param = param;
 
   // Skapa en ny tråd som kör "thread_main" och ge den tillgång till "data".
@@ -45,6 +53,7 @@ struct running_thread *exec(int param) {
 // gång för varje anrop till "exec".
 int wait(struct running_thread *data) {
   // Hämta resultatet, frigör minnet och returnera resultatet.
+  sema_down(&(data->sema));
   int result = data->result;
   free(data);
   return result;
@@ -66,7 +75,6 @@ int wait(struct running_thread *data) {
 int do_work(int param) {
   // Här sker tungt arbete...
   timer_msleep(param);
-
   // För enkelhets skull returnerar vi bara parametern i kvadrat.
   return param * param;
 }
