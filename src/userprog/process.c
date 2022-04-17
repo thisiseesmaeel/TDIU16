@@ -26,6 +26,10 @@
 #define HACK
 
 
+struct semaphore start_process_sema;
+bool process_started = false;
+
+
 /* This function is called at boot time (threads/init.c) to initialize
  * the process subsystem. */
 void process_init(void)
@@ -70,6 +74,8 @@ process_execute (const char *command_line)
   tid_t thread_id = -1;
   int  process_id = -1;
 
+  sema_init(&start_process_sema, 0);
+
   /* LOCAL variable will cease existence when function return! */
   struct parameters_to_start_process arguments;
 
@@ -84,15 +90,33 @@ process_execute (const char *command_line)
 
 
   strlcpy_first_word (debug_name, command_line, 64);
-  
-  /* SCHEDULES function `start_process' to run (LATER) */
-  thread_id = thread_create (debug_name, PRI_DEFAULT,
-                             (thread_func*)start_process, &arguments);
 
-  process_id = thread_id;
+  /* SCHEDULES function `start_process' to run (LATER) */
+  thread_id = thread_create(debug_name, PRI_DEFAULT,
+                            (thread_func *)start_process, &arguments);
+
+  
+  debug("%s#%d: Waiting ...\n",
+        thread_current()->name,
+        thread_current()->tid);
+
+  //sema_down(&(thread_current()->sema));
+  if(thread_id == -1){
+      sema_up(&start_process_sema);
+   }
+   sema_down(&start_process_sema);
+  debug("%s#%d: Done waiting ...\n",
+        thread_current()->name,
+        thread_current()->tid);
+
+   
+   if(process_started){
+      process_id = thread_id;
+      process_started = false;
+   }
 
   /* AVOID bad stuff by turning off. YOU will fix this! */
-  power_off();
+  //power_off();
   
   
   /* WHICH thread may still be using this right now? */
@@ -164,13 +188,22 @@ start_process (struct parameters_to_start_process* parameters)
     
 //    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
 
+    debug("%s#%d: Resolving ...\n",
+          thread_current()->name,
+          thread_current()->tid);
+
+    process_started = true;
+    // sema_up(&(thread_current()->sema));
+    sema_up(&start_process_sema);
   }
+   
+   
 
   debug("%s#%d: start_process(\"%s\") DONE\n",
         thread_current()->name,
         thread_current()->tid,
         parameters->command_line);
-  
+
   
   /* If load fail, quit. Load may fail for several reasons.
      Some simple examples:
@@ -178,11 +211,20 @@ start_process (struct parameters_to_start_process* parameters)
      - File do not contain a valid program
      - Not enough memory
   */
-  if ( ! success )
+  if (!success)
   {
-    thread_exit ();
+     process_started = false;
+
+     debug("%s#%d: Resolving ...\n",
+           thread_current()->name,
+           thread_current()->tid);
+
+     // sema_up(&(thread_current()->sema));
+     sema_up(&start_process_sema);
+
+     thread_exit();
   }
-  
+
   /* Start the user process by simulating a return from an interrupt,
      implemented by intr_exit (in threads/intr-stubs.S). Because
      intr_exit takes all of its arguments on the stack in the form of

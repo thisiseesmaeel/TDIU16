@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "userprog/flist.h"
+#include "threads/synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -96,7 +97,9 @@ struct thread
 
     /* YES! You may want to add stuff. But make note of point 2 above. */
     struct file_table file_table;
-   
+
+    
+   struct semaphore sema;
 
 
 #ifdef USERPROG

@@ -116,6 +116,8 @@ init_thread (struct thread *t, const char *name, int priority)
 
   /* YES! You may want add stuff here. */
   file_table_init(&(t -> file_table));
+
+  sema_init(&(t -> sema), 0);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -229,6 +231,7 @@ thread_create (const char *name, int priority,
         thread_current()->name,
         thread_current()->tid,
         name, tid);
+
   return tid;
 }
 
