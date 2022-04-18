@@ -26,10 +26,6 @@
 #define HACK
 
 
-struct semaphore start_process_sema;
-bool process_started = false;
-
-
 /* This function is called at boot time (threads/init.c) to initialize
  * the process subsystem. */
 void process_init(void)
@@ -55,6 +51,8 @@ void process_print_list()
 struct parameters_to_start_process
 {
   char* command_line;
+  struct semaphore start_process_sema;
+  tid_t result;
 };
 
 static void
@@ -74,10 +72,12 @@ process_execute (const char *command_line)
   tid_t thread_id = -1;
   int  process_id = -1;
 
-  sema_init(&start_process_sema, 0);
 
   /* LOCAL variable will cease existence when function return! */
   struct parameters_to_start_process arguments;
+  arguments.result = -1;
+  
+  sema_init(&(arguments.start_process_sema), 0);
 
   debug("%s#%d: process_execute(\"%s\") ENTERED\n",
         thread_current()->name,
@@ -100,20 +100,16 @@ process_execute (const char *command_line)
         thread_current()->name,
         thread_current()->tid);
 
-  //sema_down(&(thread_current()->sema));
-  if(thread_id == -1){
-      sema_up(&start_process_sema);
+  if(thread_id != -1){
+     sema_down(&(arguments.start_process_sema));
+     process_id = arguments.result;
    }
-   sema_down(&start_process_sema);
+
+
   debug("%s#%d: Done waiting ...\n",
         thread_current()->name,
         thread_current()->tid);
-
    
-   if(process_started){
-      process_id = thread_id;
-      process_started = false;
-   }
 
   /* AVOID bad stuff by turning off. YOU will fix this! */
   //power_off();
@@ -187,17 +183,17 @@ start_process (struct parameters_to_start_process* parameters)
        for debug purposes. Disable the dump when it works. */
     
 //    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
+      parameters->result = thread_tid();
 
+  }
+   
     debug("%s#%d: Resolving ...\n",
           thread_current()->name,
           thread_current()->tid);
 
-    process_started = true;
-    // sema_up(&(thread_current()->sema));
-    sema_up(&start_process_sema);
-  }
    
-   
+    
+   sema_up(&(parameters->start_process_sema));
 
   debug("%s#%d: start_process(\"%s\") DONE\n",
         thread_current()->name,
@@ -213,17 +209,14 @@ start_process (struct parameters_to_start_process* parameters)
   */
   if (!success)
   {
-     process_started = false;
-
      debug("%s#%d: Resolving ...\n",
            thread_current()->name,
            thread_current()->tid);
-
-     // sema_up(&(thread_current()->sema));
-     sema_up(&start_process_sema);
-
+   
      thread_exit();
   }
+
+  
 
   /* Start the user process by simulating a return from an interrupt,
      implemented by intr_exit (in threads/intr-stubs.S). Because

@@ -98,9 +98,6 @@ struct thread
     /* YES! You may want to add stuff. But make note of point 2 above. */
     struct file_table file_table;
 
-    
-   struct semaphore sema;
-
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
