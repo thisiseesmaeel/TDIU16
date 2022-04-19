@@ -1,6 +1,6 @@
 #ifndef _PLIST_H_
 #define _PLIST_H_
-
+#include <stdbool.h>
 
 /* Place functions to handle a running process here (process list).
    
@@ -29,5 +29,38 @@
      
  */
 
+typedef int pid_t;
+
+struct process
+{
+  pid_t parent_pid;
+  pid_t my_pid;
+  int status;
+  bool status_needed;
+  bool alive;
+  bool is_in_list;
+};
+
+typedef struct process value_t; //Process
+typedef int key_t; //Nyckel
+
+#define PLIST_SIZE 128
+
+
+
+struct plist {
+    value_t content[PLIST_SIZE];
+    int size;
+};
+
+void plist_init(struct plist* pl);
+
+key_t plist_insert(struct plist* pl, value_t v);
+
+value_t plist_find(struct plist* pl, key_t k);
+
+value_t plist_remove(struct plist* pl, key_t k);
+
+void plist_print(struct plist* pl);
 
 #endif

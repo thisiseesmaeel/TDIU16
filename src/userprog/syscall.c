@@ -202,6 +202,14 @@ syscall_handler (struct intr_frame *f)
       break;
     }
 
+    case SYS_EXEC:
+    {
+      // Implement
+      f->eax = process_execute(esp[1]);
+
+      break;
+    }
+
     default:
     {
       printf ("Executed an unknown system call!\n");
