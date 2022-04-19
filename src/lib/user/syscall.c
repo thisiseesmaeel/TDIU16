@@ -183,3 +183,8 @@ inumber (int fd)
   return syscall1 (SYS_INUMBER, fd);
 }
 
+void
+plist(){
+  syscall0(SYS_PLIST);
+}
+

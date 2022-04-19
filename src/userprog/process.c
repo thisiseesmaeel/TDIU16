@@ -30,6 +30,9 @@
  * the process subsystem. */
 void process_init(void)
 {
+   plist_init(plist);
+   printf("\nInitialized plist\n");
+
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -45,6 +48,7 @@ void process_exit(int status UNUSED)
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
+   //plist_print()
 }
 
 
@@ -52,7 +56,9 @@ struct parameters_to_start_process
 {
   char* command_line;
   struct semaphore start_process_sema;
+  tid_t parent_tid;
   tid_t result;
+  
 };
 
 static void
@@ -76,6 +82,7 @@ process_execute (const char *command_line)
   /* LOCAL variable will cease existence when function return! */
   struct parameters_to_start_process arguments;
   arguments.result = -1;
+  arguments.parent_tid = thread_tid();
   
   sema_init(&(arguments.start_process_sema), 0);
 
@@ -113,6 +120,17 @@ process_execute (const char *command_line)
         thread_current()->name,
         thread_current()->tid,
         command_line, process_id);
+
+  if (process_id != -1)
+  {
+     struct process p;
+     p.alive = true;
+     p.status_needed = false;
+     p.status = -1;
+     p.my_pid = 233;
+     p.parent_pid = 13;
+     plist_insert(plist, &p);
+  }
 
   /* MUST be -1 if `load' in `start_process' return false */
   return process_id;
@@ -183,7 +201,8 @@ start_process (struct parameters_to_start_process* parameters)
         thread_current()->tid,
         parameters->command_line);
 
-   sema_up(&(parameters->start_process_sema));
+
+  sema_up(&(parameters->start_process_sema));
   
   /* If load fail, quit. Load may fail for several reasons.
      Some simple examples:

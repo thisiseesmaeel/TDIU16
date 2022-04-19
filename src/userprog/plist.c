@@ -7,59 +7,64 @@
 
 void plist_init(struct plist* pl){
     for(int i = 0; i < PLIST_SIZE; i++){
-        pl -> content[i].is_in_list = false;
+        pl -> content[i] = NULL;
     }
     pl -> size = 0;
+    printf("\nInitialized DONE\n");
 }
 
-key_t plist_insert(struct plist* pl, value_t v){
+key_t plist_insert(struct plist* pl, pl_value_t v){
+    printf("\nEntering insert\n");
     key_t index = -1;
-    if(pl -> size >= PLIST_SIZE){
+    printf("\n%d\n", pl->size);
+    if((pl->size) >= PLIST_SIZE){
+        printf("\n Inside first if\n");
         return -1;
     }
     
+
     for(int i = 0; i < PLIST_SIZE; i++){
-        if(!(pl->content[i].is_in_list)){
+        printf("\n%d\n", i);
+        if((pl->content[i]) == NULL){
             pl->content[i] = v;
             pl->size ++;
             index = i;
             break;
         }
     }
+    printf("\npassed2\n");
     return index;
 }
 
-value_t plist_find(struct plist* pl, key_t k){
+pl_value_t plist_find(struct plist* pl, key_t k){
 
-    if(!(pl -> content[k].is_in_list)){
-        return;
+    if((pl -> content[k]) == NULL){
+        return NULL;
     }
     return pl -> content[k];
 }
 
-value_t plist_remove(struct plist* pl, key_t k){
-    //value_t result = plist_find(pl, k);
-  
-    if(!(pl->content[k].status_needed)) 
+pl_value_t plist_remove(struct plist* pl, key_t k){
+    pl_value_t p = plist_find(pl, k); 
+    if(p != NULL) 
     {
-        pl->content[k].is_in_list = false;
+        pl->content[k] = NULL;
         pl->size--;
+        return p;
     }
-    return;
+    return NULL;
 }
 
 void plist_print(struct plist* pl){
     for(int i = 0; i < pl->size; i++){
-        printf("%10s%10s%10s%10s%10s%10s\n", "In table", "PID", "Alive",
+        printf("%10s%10s%10s%10s%10s\n", "PID", "Alive",
          "Status", "Parent id", "Status needed");
-        printf("%s\n", '='*30);
-        printf("%10d | %10d | %10d | %10d | %10d | %10d\n", pl->content[i].is_in_list,
-                                                            pl->content[i].my_pid,
-                                                            pl->content[i].alive,
-                                                            pl->content[i].status,
-                                                            pl->content[i].parent_pid,
-                                                            pl->content[i].status_needed);
-        printf("%s\n", '='*30);
-
+        printf("%s\n", (char *) ('='*30));
+        printf("%10d | %10d | %10d | %10d | %10d\n", pl->content[i]->my_pid,
+                                                            pl->content[i]->alive,
+                                                            pl->content[i]->status,
+                                                            pl->content[i]->parent_pid,
+                                                            pl->content[i]->status_needed);
+        printf("%s\n", (char *) ('='*30));
     }
 }

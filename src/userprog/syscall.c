@@ -15,6 +15,7 @@
 #include "devices/input.h"
 #include "../lib/kernel/console.h"
 #include "userprog/flist.h"
+#include "userprog/plist.h"
 static void syscall_handler (struct intr_frame *);
 
 struct file* retrieve_file(int32_t );
@@ -205,8 +206,15 @@ syscall_handler (struct intr_frame *f)
     case SYS_EXEC:
     {
       // Implement
-      f->eax = process_execute(esp[1]);
+      f->eax = process_execute( (char *) esp[1]);
 
+      break;
+    }
+
+    case SYS_PLIST:
+    {
+      printf ("\n\n\nSYS_PLIST is running!\n\n\n");
+      plist_print(plist);
       break;
     }
 

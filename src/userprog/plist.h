@@ -38,28 +38,26 @@ struct process
   int status;
   bool status_needed;
   bool alive;
-  bool is_in_list;
 };
 
-typedef struct process value_t; //Process
-typedef int key_t; //Nyckel
+typedef struct process* pl_value_t;
+typedef int key_t; 
 
 #define PLIST_SIZE 128
 
 
-
 struct plist {
-    value_t content[PLIST_SIZE];
+    pl_value_t content[PLIST_SIZE];
     int size;
 };
 
 void plist_init(struct plist* pl);
 
-key_t plist_insert(struct plist* pl, value_t v);
+key_t plist_insert(struct plist* pl, pl_value_t v);
 
-value_t plist_find(struct plist* pl, key_t k);
+pl_value_t plist_find(struct plist* pl, key_t k);
 
-value_t plist_remove(struct plist* pl, key_t k);
+pl_value_t plist_remove(struct plist* pl, key_t k);
 
 void plist_print(struct plist* pl);
 

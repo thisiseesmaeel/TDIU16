@@ -3,6 +3,8 @@
 
 #include "threads/thread.h"
 
+struct plist* plist;
+
 void process_init (void);
 void process_print_list (void);
 void process_exit (int status);
