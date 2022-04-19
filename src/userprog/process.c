@@ -95,22 +95,13 @@ process_execute (const char *command_line)
   thread_id = thread_create(debug_name, PRI_DEFAULT,
                             (thread_func *)start_process, &arguments);
 
-  
-  debug("%s#%d: Waiting ...\n",
-        thread_current()->name,
-        thread_current()->tid);
 
   if(thread_id != -1){
      sema_down(&(arguments.start_process_sema));
      process_id = arguments.result;
    }
-
-
-  debug("%s#%d: Done waiting ...\n",
-        thread_current()->name,
-        thread_current()->tid);
+ 
    
-
   /* AVOID bad stuff by turning off. YOU will fix this! */
   //power_off();
   
@@ -187,19 +178,12 @@ start_process (struct parameters_to_start_process* parameters)
 
   }
    
-    debug("%s#%d: Resolving ...\n",
-          thread_current()->name,
-          thread_current()->tid);
-
-   
-    
-   sema_up(&(parameters->start_process_sema));
-
   debug("%s#%d: start_process(\"%s\") DONE\n",
         thread_current()->name,
         thread_current()->tid,
         parameters->command_line);
 
+   sema_up(&(parameters->start_process_sema));
   
   /* If load fail, quit. Load may fail for several reasons.
      Some simple examples:
@@ -209,14 +193,9 @@ start_process (struct parameters_to_start_process* parameters)
   */
   if (!success)
   {
-     debug("%s#%d: Resolving ...\n",
-           thread_current()->name,
-           thread_current()->tid);
-   
      thread_exit();
   }
 
-  
 
   /* Start the user process by simulating a return from an interrupt,
      implemented by intr_exit (in threads/intr-stubs.S). Because
