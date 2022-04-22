@@ -41,6 +41,7 @@
 
 int main(int argc, char* argv[])
 {
+  //plist();
   char cmd[BUF_SIZE];
   unsigned j = 0;
   unsigned simul = 0;
@@ -83,7 +84,7 @@ int main(int argc, char* argv[])
     
     snprintf(cmd, BUF_SIZE, "generic_parent %s %i %i", "dummy", j*simul, simul);
     
-    exec(cmd);
+    //exec(cmd);
     
     plist();
 

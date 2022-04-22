@@ -23,7 +23,7 @@
 #include "userprog/plist.h"
 
 
-struct plist pl;
+static struct plist pl;
 
 
 //struct plist pl = malloc(sizeof(struct plist));
@@ -112,21 +112,20 @@ process_execute (const char *command_line)
   thread_id = thread_create(debug_name, PRI_DEFAULT,
                             (thread_func *)start_process, &arguments);
 
-
-   struct process p;
-     p.alive = true;
-     p.status_needed = false;
-     p.status = -1;
-     p.my_pid = 233;
-     p.parent_pid = 13;
-
-   plist_insert(&pl, &p);
-
   if(thread_id != -1){
      sema_down(&(arguments.start_process_sema));
      process_id = arguments.result;
-   }
-   
+
+     struct process *child_process = malloc(sizeof(struct process));
+     child_process->alive = true;
+     child_process->status_needed = false;
+     child_process->status = -1;
+     child_process->my_pid = process_id;
+     child_process->parent_pid = thread_tid();
+
+     plist_insert(&pl, child_process);
+  }
+
   /* AVOID bad stuff by turning off. YOU will fix this! */
   //power_off();
   
@@ -138,17 +137,6 @@ process_execute (const char *command_line)
         thread_current()->name,
         thread_current()->tid,
         command_line, process_id);
-
-//   if (process_id != -1)
-//   {
-//      struct process p;
-//      p.alive = true;
-//      p.status_needed = false;
-//      p.status = -1;
-//      p.my_pid = 233;
-//      p.parent_pid = 13;
-//      plist_insert(plist, &p);
-//   }
 
   /* MUST be -1 if `load' in `start_process' return false */
   return process_id;
@@ -333,6 +321,6 @@ process_activate (void)
 }
 
 
-struct plist show_plist(void){
-   return pl;
+void process_list_print(void){
+   plist_print(&pl);
 }

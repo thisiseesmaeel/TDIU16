@@ -218,8 +218,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_PLIST:
     {
       //printf ("\n\n\nSYS_PLIST is running!\n\n\n");
-      struct plist pl = show_plist();
-      plist_print(&pl);
+      process_list_print();
       //int i = test();
       //plist_print(show_plist);
       break;
