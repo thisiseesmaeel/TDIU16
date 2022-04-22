@@ -2,8 +2,7 @@
 #define USERPROG_PROCESS_H
 
 #include "threads/thread.h"
-
-struct plist* plist;
+#include "userprog/plist.h"
 
 void process_init (void);
 void process_print_list (void);
@@ -12,6 +11,7 @@ tid_t process_execute (const char *file_name);
 int process_wait (tid_t);
 void process_cleanup (void);
 void process_activate (void);
+struct plist show_plist(void);
 
 /* This is unacceptable solutions. */
 #define INFINITE_WAIT() for ( ; ; ) thread_yield()

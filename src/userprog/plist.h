@@ -1,5 +1,6 @@
-#ifndef _PLIST_H_
-#define _PLIST_H_
+#ifndef USERPROG_PLIST_H_
+#define USERPROG_PLIST_H_
+
 #include <stdbool.h>
 
 /* Place functions to handle a running process here (process list).
@@ -29,6 +30,7 @@
      
  */
 
+
 typedef int pid_t;
 
 struct process
@@ -45,11 +47,11 @@ typedef int key_t;
 
 #define PLIST_SIZE 128
 
-
 struct plist {
     pl_value_t content[PLIST_SIZE];
     int size;
 };
+
 
 void plist_init(struct plist* pl);
 

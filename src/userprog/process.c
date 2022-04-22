@@ -18,10 +18,15 @@
 #include "threads/synch.h"
 #include "threads/malloc.h"
 #include "lib/kernel/list.h"
-
 #include "userprog/flist.h"
+#include "userprog/syscall.h"
 #include "userprog/plist.h"
 
+
+struct plist pl;
+
+
+//struct plist pl = malloc(sizeof(struct plist));
 /* HACK defines code you must remove and implement in a proper way */
 #define HACK
 
@@ -30,8 +35,10 @@
  * the process subsystem. */
 void process_init(void)
 {
-   plist_init(plist);
+   plist_init(&pl);
    printf("\nInitialized plist\n");
+
+   // printf("Size of plist is: %d\n", pl.size);
 
 }
 
@@ -73,6 +80,9 @@ start_process(struct parameters_to_start_process* parameters) NO_RETURN;
 int
 process_execute (const char *command_line) 
 {
+   // printf("Size of plist in PROCESS_EXECUTE is: " );
+   // printf("%d\n", pl.size);
+
   char debug_name[64];
   int command_line_size = strlen(command_line) + 1;
   tid_t thread_id = -1;
@@ -103,11 +113,19 @@ process_execute (const char *command_line)
                             (thread_func *)start_process, &arguments);
 
 
+   struct process p;
+     p.alive = true;
+     p.status_needed = false;
+     p.status = -1;
+     p.my_pid = 233;
+     p.parent_pid = 13;
+
+   plist_insert(&pl, &p);
+
   if(thread_id != -1){
      sema_down(&(arguments.start_process_sema));
      process_id = arguments.result;
    }
- 
    
   /* AVOID bad stuff by turning off. YOU will fix this! */
   //power_off();
@@ -121,16 +139,16 @@ process_execute (const char *command_line)
         thread_current()->tid,
         command_line, process_id);
 
-  if (process_id != -1)
-  {
-     struct process p;
-     p.alive = true;
-     p.status_needed = false;
-     p.status = -1;
-     p.my_pid = 233;
-     p.parent_pid = 13;
-     plist_insert(plist, &p);
-  }
+//   if (process_id != -1)
+//   {
+//      struct process p;
+//      p.alive = true;
+//      p.status_needed = false;
+//      p.status = -1;
+//      p.my_pid = 233;
+//      p.parent_pid = 13;
+//      plist_insert(plist, &p);
+//   }
 
   /* MUST be -1 if `load' in `start_process' return false */
   return process_id;
@@ -265,7 +283,7 @@ void
 process_cleanup (void)
 {
   struct thread  *cur = thread_current ();
-  uint32_t       *pd  = cur->pagedir;
+  uint32_t *pd  = cur->pagedir;
   int status = -1;
   
   debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
@@ -314,3 +332,7 @@ process_activate (void)
   tss_update ();
 }
 
+
+struct plist show_plist(void){
+   return pl;
+}
