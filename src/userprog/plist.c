@@ -58,6 +58,21 @@ pl_value_t plist_remove(struct plist *pl, key_t k)
     return NULL;
 }
 
+pl_value_t plist_remove_helper(struct plist* pl, pid_t k){
+    for (int i = 0; i < PLIST_SIZE; i++)
+    {
+        if ((pl->content[i]->my_pid) == k)
+        {
+            //printf("Found\n");
+            //pl->content[k] = NULL;
+            pl->size--;
+            return pl->content[i];
+        }
+    }
+    
+    return NULL;
+}
+
 void plist_print(struct plist *pl)
 {
     const int number_of_chars = 73;

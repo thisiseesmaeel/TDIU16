@@ -41,7 +41,6 @@
 
 int main(int argc, char* argv[])
 {
-  //plist();
   char cmd[BUF_SIZE];
   unsigned j = 0;
   unsigned simul = 0;

@@ -313,7 +313,10 @@ thread_exit (void)
   // If a process crashes we need to empty its table and close all opened files
   struct thread *current_thread = thread_current();
   file_table_close(&(current_thread->file_table));
+  
+  
   ///////////////////////////////////////////////////////////////////////////////
+
   ASSERT(!intr_context());
   DEBUG_thread_count_down();
 
@@ -327,6 +330,8 @@ thread_exit (void)
   thread_current ()->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();
+
+  
 }
 
 /* Yields the CPU.  The current thread is not put to sleep and

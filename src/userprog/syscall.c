@@ -65,6 +65,8 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_EXIT:
     {
+      // We need to remove this process now
+      process_exit((int) esp[1]);
       thread_exit();
       break;
     }
@@ -208,7 +210,6 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_EXEC:
     {
-      // Implement
       //printf("\nSYS_EXEC IS RUNNING!\n");
       f->eax = process_execute( (char *) esp[1]);
 
@@ -219,8 +220,6 @@ syscall_handler (struct intr_frame *f)
     {
       //printf ("\n\n\nSYS_PLIST is running!\n\n\n");
       process_list_print();
-      //int i = test();
-      //plist_print(show_plist);
       break;
     }
 

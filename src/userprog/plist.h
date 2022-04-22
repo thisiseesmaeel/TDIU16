@@ -61,6 +61,8 @@ pl_value_t plist_find(struct plist* pl, key_t k);
 
 pl_value_t plist_remove(struct plist* pl, key_t k);
 
+pl_value_t plist_remove_helper(struct plist* pl, pid_t k);
+
 void plist_print(struct plist* pl);
 
 #endif
