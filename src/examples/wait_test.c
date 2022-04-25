@@ -25,7 +25,7 @@ int main(void)
   int pid = exec("fast 10");
 
   // Wait a little while to make sure that the child terminated.
-  sleep(1000);
+  //sleep(1000);
 
   int result = wait(pid);
   if (result != 10)
@@ -39,7 +39,7 @@ int main(void)
 
   // Don't sleep here, we want to call wait before the child is done.
 
-  result = wait(pid);
+  //result = wait(pid);
   if (result != 20)
   {
     printf("ERROR: Expected 20 from wait, but got: %d\n", result);

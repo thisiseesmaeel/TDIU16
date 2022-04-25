@@ -58,17 +58,34 @@ pl_value_t plist_remove(struct plist *pl, key_t k)
     return NULL;
 }
 
-pl_value_t plist_remove_helper(struct plist* pl, pid_t k){
+pl_value_t plist_remove_helper(struct plist* pl, pid_t pid){
+    // struct process* child = plist_find_by_pid(pl, pid);
+    // struct process* parent = plist_find_by_pid(pl, child->parent_pid);
+
+    
+    printf("\n\nEntering remove and tries to remove %d\n\n", pid);
+    plist_print(pl);
+
+
     for (int i = 0; i < PLIST_SIZE; i++)
     {
-        if ((pl->content[i]->my_pid) == k)
+        //printf("PID: %d\tSTATUS_NEEDED: %d\n", pl->content[i]->my_pid, pl->content[i]->status_needed);
+        if (((pl->content[i]) != NULL) && 
+            ((pl->content[i]->my_pid) == pid) && 
+            (pl->content[i]->status_needed == false))
         {
-            //printf("Found\n");
-            //pl->content[k] = NULL;
+            struct process* removed_process = pl->content[i];
+            pl->content[i] = NULL;
             pl->size--;
-            return pl->content[i];
+            printf("\nFound the process %d and removed it!\n\n", pid);
+            printf("plist after removing:\n");
+            plist_print(pl);
+            return removed_process;
         }
+        
     }
+    //plist_print(pl);
+    //printf("\n");
     
     return NULL;
 }
@@ -83,7 +100,7 @@ void plist_print(struct plist *pl)
     for (int k = 0; k < number_of_chars; k++)
         putchar('=');
 
-    for (int i = 0; i < pl->size; i++)
+    for (int i = 0; i < PLIST_SIZE; i++)
     {
         if (pl->content[i] != NULL)
         {
@@ -98,4 +115,16 @@ void plist_print(struct plist *pl)
     }
 
     printf("\n\n");
+}
+
+
+pl_value_t plist_find_by_pid(struct plist* pl, pid_t pid){
+    for(int i = 0; i < PLIST_SIZE; i++){
+        if((pl->content[i] != NULL) && (pl->content[i]-> my_pid == pid))
+        {
+            return pl->content[i];
+        }
+    }
+
+    return NULL;
 }

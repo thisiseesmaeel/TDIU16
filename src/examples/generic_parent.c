@@ -37,11 +37,14 @@ int main(int argc, char* argv[])
   for(i = 0; i < count; i++)
   {
      snprintf(cmd, BUF_SIZE, "%s %i", child, start + i);
+
+     //printf("\nCMD: \"%s\"\n", cmd);
+
      if (exec(cmd) == -1)
      {
-	printf("!! ERROR !!\n");
-	printf("Could not start '%s'\n", cmd);
-	break;
+         printf("!! ERROR !!\n");
+         printf("Could not start '%s'\n", cmd);
+         break;
      }
   }
   exit(start + i);

@@ -75,7 +75,22 @@ int main(int argc, char* argv[])
   
   printf("Will try to start a total of %d processes in groups of %d\n",
          simul * repeat, simul);
+
+
   
+  // char * cmd2 = "generic_parent dummy 0 1";
+  // printf("%s\n", cmd2);
+  // exec(cmd2);
+
+  // int ticks = 10 * 1000 * 1000 * j / repeat;
+  // /* since we do not have the wait systemcall yet */
+  // printf("Now entering busy-loop to let some processes finish\n");
+  // while (ticks--)
+    ;
+
+
+
+
   for (j = 0; j < repeat; ++j)
   {
     /* you may have to increase the multiple to more than 5 */
@@ -83,8 +98,11 @@ int main(int argc, char* argv[])
     
     snprintf(cmd, BUF_SIZE, "generic_parent %s %i %i", "dummy", j*simul, simul);
     
-    //exec(cmd);
     
+
+    // printf("\nParent CMD: \"%s\"\n", cmd);
+    exec(cmd);
+
     plist();
 
     /* since we do not have the wait systemcall yet */
@@ -92,5 +110,6 @@ int main(int argc, char* argv[])
     while (ticks--)
       ;
   }
+  
   return 0;
 }

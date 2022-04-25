@@ -13,6 +13,4 @@ main(void)
   //halt();
   exit(21);
   /* not reached */
-  printf("dfasdfdsafdsafdsafasddfdsa");
-  return 0;
 }
