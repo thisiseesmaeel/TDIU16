@@ -19,6 +19,7 @@ enum
     SYS_TELL,                   /* Report current position in a file. */
     SYS_CLOSE,                  /* Close a file. */
     SYS_PLIST,                  /* Prints the process list */
+    SYS_SLEEP,                  /* Pause the process (in millisecond) */
 
     /* Memory mapping system calls. */
     SYS_MMAP,                   /* Map a file into memory. */

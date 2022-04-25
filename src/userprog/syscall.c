@@ -65,10 +65,6 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_EXIT:
     {
-      // We need to remove this process now
-      //printf("\nStatus: %d\n\n", esp[1]);
-      
-      printf("\n\n\nSYS_EXIT is running!\n\n\n");
       process_exit((int) esp[1]);
       thread_exit();
       
@@ -222,11 +218,16 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_PLIST:
     {
-      //printf ("\n\n\nSYS_PLIST is running!\n\n\n");
       process_print_list();
       break;
     }
 
+    case SYS_SLEEP:
+    {
+      printf ("\nSYS_SLEEP is running!\n");
+      break;
+    }
+    
     default:
     {
       printf ("Executed an unknown system call!\n");

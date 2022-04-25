@@ -2,6 +2,7 @@
 #define USERPROG_PLIST_H_
 
 #include <stdbool.h>
+#include "threads/synch.h"
 
 /* Place functions to handle a running process here (process list).
    
@@ -50,6 +51,8 @@ typedef int key_t;
 struct plist {
     pl_value_t content[PLIST_SIZE];
     int size;
+
+    struct lock lock;
 };
 
 

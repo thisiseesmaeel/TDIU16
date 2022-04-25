@@ -82,6 +82,8 @@ int main(int argc, char* argv[])
   // printf("%s\n", cmd2);
   // exec(cmd2);
 
+  // plist();
+
   // int ticks = 10 * 1000 * 1000 * j / repeat;
   // /* since we do not have the wait systemcall yet */
   // printf("Now entering busy-loop to let some processes finish\n");

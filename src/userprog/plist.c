@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 #include "plist.h"
+
 
 void plist_init(struct plist *pl)
 {
@@ -11,14 +13,18 @@ void plist_init(struct plist *pl)
         pl->content[i] = NULL;
     }
     pl->size = 0;
+    lock_init (&pl->lock);
 }
 
 key_t plist_insert(struct plist *pl, pl_value_t v)
 {
+    lock_acquire(&pl->lock);
+
     key_t index = -1;
 
     if ((pl->size) >= PLIST_SIZE)
     {
+        lock_release(&pl->lock);
         return -1;
     }
 
@@ -33,43 +39,46 @@ key_t plist_insert(struct plist *pl, pl_value_t v)
         }
     }
 
+    lock_release(&pl->lock);
     return index;
 }
 
 pl_value_t plist_find(struct plist *pl, key_t k)
 {
+    lock_acquire(&pl->lock);
 
     if ((pl->content[k]) == NULL)
     {
+        lock_release(&pl->lock);
         return NULL;
     }
+
+    lock_release(&pl->lock);
     return pl->content[k];
 }
 
 pl_value_t plist_remove(struct plist *pl, key_t k)
-{
+{   
     pl_value_t p = plist_find(pl, k);
+    
+    lock_acquire(&pl->lock);
     if (p != NULL)
     {
         pl->content[k] = NULL;
         pl->size--;
+        lock_release(&pl->lock);
         return p;
+       
     }
+    lock_release(&pl->lock);
     return NULL;
 }
 
 pl_value_t plist_remove_helper(struct plist* pl, pid_t pid){
-    // struct process* child = plist_find_by_pid(pl, pid);
-    // struct process* parent = plist_find_by_pid(pl, child->parent_pid);
-
-    
-    printf("\n\nEntering remove and tries to remove %d\n\n", pid);
-    plist_print(pl);
-
+    lock_acquire(&pl->lock);
 
     for (int i = 0; i < PLIST_SIZE; i++)
     {
-        //printf("PID: %d\tSTATUS_NEEDED: %d\n", pl->content[i]->my_pid, pl->content[i]->status_needed);
         if (((pl->content[i]) != NULL) && 
             ((pl->content[i]->my_pid) == pid) && 
             (pl->content[i]->status_needed == false))
@@ -77,21 +86,18 @@ pl_value_t plist_remove_helper(struct plist* pl, pid_t pid){
             struct process* removed_process = pl->content[i];
             pl->content[i] = NULL;
             pl->size--;
-            printf("\nFound the process %d and removed it!\n\n", pid);
-            printf("plist after removing:\n");
-            plist_print(pl);
+            lock_release(&pl->lock);
             return removed_process;
         }
         
     }
-    //plist_print(pl);
-    //printf("\n");
-    
+    lock_release(&pl->lock);
     return NULL;
 }
 
 void plist_print(struct plist *pl)
 {
+    lock_acquire(&pl->lock);
     const int number_of_chars = 73;
 
     putchar('\n');
@@ -113,18 +119,20 @@ void plist_print(struct plist *pl)
                                             pl->content[i]->status_needed);
         }
     }
-
+    lock_release(&pl->lock);
     printf("\n\n");
 }
 
 
 pl_value_t plist_find_by_pid(struct plist* pl, pid_t pid){
+    lock_acquire(&pl->lock);
     for(int i = 0; i < PLIST_SIZE; i++){
         if((pl->content[i] != NULL) && (pl->content[i]-> my_pid == pid))
         {
+            lock_release(&pl->lock);
             return pl->content[i];
         }
     }
-
+    lock_release(&pl->lock);
     return NULL;
 }

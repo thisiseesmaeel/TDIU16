@@ -32,7 +32,6 @@ static struct plist pl;
 void process_init(void)
 {
    plist_init(&pl);
-   printf("\nInitialized plist\n");
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -42,34 +41,14 @@ void process_init(void)
  * from thread_exit - do not call cleanup twice! */
 void process_exit(int status)
 {
-   // printf("\n");
-   // printf("Process to be removed: %d\n", thread_tid());
-   // printf("\n");
+   printf("Process %d is exiting...\n", thread_tid());
    
-   // printf("Process Table before removing...\n");
-   // process_list_print();
-   // printf("\n");
-
-   // printf("Peocess %d is exiting...\n", thread_tid());
-   // process_print_list();
    struct process* p = plist_find_by_pid(&pl, thread_tid());
 
    if(p != NULL){
       p->status = status;
       p->alive = false;
    }
-   
-   // printf("\nProcess %d wants to be removed.\n", thread_tid());
-   // plist_print(&pl);
-   
-   // struct process* removed_process = plist_remove_helper(&pl, thread_tid());
-   // plist_print(&pl);
-
-   // if(removed_process != NULL)
-   //    free(removed_process);
-
-   // printf("Process Table after removing...\n");
-   // process_list_print();
 }
 
 /* Print a list of all running processes. The list shall include all
@@ -98,9 +77,6 @@ start_process(struct parameters_to_start_process *parameters) NO_RETURN;
    cannot be created. */
 int process_execute(const char *command_line)
 {
-   // printf("Size of plist in PROCESS_EXECUTE is: " );
-   // printf("%d\n", pl.size);
-
    char debug_name[64];
    int command_line_size = strlen(command_line) + 1;
    tid_t thread_id = -1;
@@ -132,22 +108,6 @@ int process_execute(const char *command_line)
    {
       sema_down(&(arguments.start_process_sema));
       process_id = arguments.result;
-
-      // if (process_id != -1)
-      // {
-      //    struct process *child_process = malloc(sizeof(struct process));
-      //    child_process->alive = true;
-      //    child_process->status_needed = false;
-      //    child_process->status = -1;
-      //    child_process->my_pid = process_id;
-      //    child_process->parent_pid = thread_tid();
-         
-      //    plist_insert(&pl, child_process);
-      //    printf("\nInserted process %d to plist!\n\n", process_id);
-
-         
-         
-      // }
    }
 
    /* AVOID bad stuff by turning off. YOU will fix this! */
@@ -163,7 +123,6 @@ int process_execute(const char *command_line)
 
    /* MUST be -1 if `load' in `start_process' return false */
 
-   process_print_list();
    return process_id;
 }
 
@@ -233,7 +192,7 @@ start_process(struct parameters_to_start_process *parameters)
       child_process->parent_pid = parameters->parent_tid;
       
       plist_insert(&pl, child_process);
-      printf("\nInserted process %d to plist!\n\n", thread_tid());
+      //printf("\nInserted process %d to plist!\n\n", thread_tid());
 
    }
 
@@ -255,7 +214,7 @@ start_process(struct parameters_to_start_process *parameters)
       thread_exit();
    }
 
-   printf("#STARTING PROCESS\n");
+   printf("# STARTING PROCESS\n");
    /* Start the user process by simulating a return from an interrupt,
       implemented by intr_exit (in threads/intr-stubs.S). Because
       intr_exit takes all of its arguments on the stack in the form of
@@ -312,8 +271,6 @@ void process_cleanup(void)
    if(removed_process != NULL){
       status = removed_process->status;
       free(removed_process);
-      //printf("%s: exit(%d)\n", thread_name(), status);
-
    }
  
    debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
