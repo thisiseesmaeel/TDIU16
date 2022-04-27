@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <debug.h>
+#include <stdint.h>
 
 /* Process identifier. */
 typedef int pid_t;
@@ -45,7 +46,7 @@ bool readdir (int fd, char name[READDIR_MAX_LEN + 1]);
 bool isdir (int fd);
 int inumber (int fd);
 void plist(void);
-void sleep(int millis);
+void sleep(int64_t millis);
 
 
 

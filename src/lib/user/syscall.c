@@ -1,4 +1,5 @@
 #include <syscall.h>
+#include <stdint.h>
 #include "../syscall-nr.h"
 
 /* Invokes syscall NUMBER, passing no arguments, and returns the
@@ -189,7 +190,7 @@ plist(){
 }
 
 void 
-sleep(int millis){
+sleep(int64_t millis){
   syscall1(SYS_SLEEP, millis);
 }
 

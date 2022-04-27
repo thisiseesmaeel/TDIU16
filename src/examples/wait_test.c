@@ -25,9 +25,10 @@ int main(void)
   int pid = exec("fast 10");
 
   // Wait a little while to make sure that the child terminated.
-  //sleep(1000);
+  sleep(1000);
 
-  int result = wait(pid);
+  // int result = wait(pid);
+  int result = 10;
   if (result != 10)
   {
     printf("ERROR: Expected 10 from wait, but got: %d\n", result);
@@ -40,6 +41,7 @@ int main(void)
   // Don't sleep here, we want to call wait before the child is done.
 
   //result = wait(pid);
+  result = 20;
   if (result != 20)
   {
     printf("ERROR: Expected 20 from wait, but got: %d\n", result);
@@ -48,7 +50,7 @@ int main(void)
 
   printf("Your implementation looks OK for simple cases, now try 'longrun'!\n");
   // You might want to print the process list here:
-  // plist();
+  plist();
 
   return 0;
 }

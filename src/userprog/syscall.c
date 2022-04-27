@@ -16,6 +16,7 @@
 #include "../lib/kernel/console.h"
 #include "userprog/flist.h"
 #include "userprog/plist.h"
+#include "devices/timer.h"
 
 
 
@@ -225,6 +226,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_SLEEP:
     {
       printf ("\nSYS_SLEEP is running!\n");
+      timer_msleep(esp[1]);
       break;
     }
     
