@@ -41,6 +41,7 @@ struct process
   int status;
   bool status_needed;
   bool alive;
+  struct semaphore sema;
 };
 
 typedef struct process* pl_value_t;
@@ -51,7 +52,6 @@ typedef int key_t;
 struct plist {
     pl_value_t content[PLIST_SIZE];
     int size;
-
     struct lock lock;
 };
 

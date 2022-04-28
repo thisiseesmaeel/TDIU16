@@ -80,8 +80,7 @@ pl_value_t plist_remove_helper(struct plist* pl, pid_t pid){
     for (int i = 0; i < PLIST_SIZE; i++)
     {
         if (((pl->content[i]) != NULL) && 
-            ((pl->content[i]->my_pid) == pid) && 
-            (pl->content[i]->status_needed == false))
+            ((pl->content[i]->my_pid) == pid))
         {
             struct process* removed_process = pl->content[i];
             pl->content[i] = NULL;

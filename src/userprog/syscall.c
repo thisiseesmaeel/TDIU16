@@ -229,6 +229,13 @@ syscall_handler (struct intr_frame *f)
       timer_msleep(esp[1]);
       break;
     }
+
+    case SYS_WAIT:
+    {
+      printf ("\nSYS_WAIT is running!\n");
+      f -> eax = process_wait( (int) esp[1]);
+      break;
+    }
     
     default:
     {

@@ -23,6 +23,7 @@
 #include "userprog/plist.h"
 
 static struct plist pl;
+struct semaphore main_sema;
 
 /* HACK defines code you must remove and implement in a proper way */
 #define HACK
@@ -32,6 +33,7 @@ static struct plist pl;
 void process_init(void)
 {
    plist_init(&pl);
+   sema_init(&main_sema, 0);
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -81,6 +83,8 @@ int process_execute(const char *command_line)
    int command_line_size = strlen(command_line) + 1;
    tid_t thread_id = -1;
    int process_id = -1;
+
+   printf("\nProcess exec is running with pid: %d\n\n", thread_tid());
 
    /* LOCAL variable will cease existence when function return! */
    struct parameters_to_start_process arguments;
@@ -190,10 +194,11 @@ start_process(struct parameters_to_start_process *parameters)
       child_process->status = -1;
       child_process->my_pid = thread_tid();
       child_process->parent_pid = parameters->parent_tid;
+      sema_init(&(child_process -> sema), 0);
       
+      printf("\nInserted process %d to plist!\n\n", thread_tid());
       plist_insert(&pl, child_process);
-      //printf("\nInserted process %d to plist!\n\n", thread_tid());
-
+      process_print_list();
    }
 
    debug("%s#%d: start_process(\"%s\") DONE\n",
@@ -214,7 +219,6 @@ start_process(struct parameters_to_start_process *parameters)
       thread_exit();
    }
 
-   printf("# STARTING PROCESS\n");
    /* Start the user process by simulating a return from an interrupt,
       implemented by intr_exit (in threads/intr-stubs.S). Because
       intr_exit takes all of its arguments on the stack in the form of
@@ -237,9 +241,40 @@ start_process(struct parameters_to_start_process *parameters)
    This function will be implemented last, after a communication
    mechanism between parent and child is established. */
 int process_wait(int child_id)
-{
+{  
    int status = -1;
+   printf("#\n process_wait is running...\n\n");
    struct thread *cur = thread_current();
+   printf("#Parent PID: %d\n# Child PID: %d \n", cur->tid, child_id);
+   process_print_list();
+
+   struct process* parent = plist_find_by_pid(&pl, cur -> tid);
+   struct process* child = plist_find_by_pid(&pl, child_id);
+
+   if(parent != NULL){
+
+      child -> status_needed = true;
+      printf("#Parent sema down on %d\n\n", parent-> my_pid);
+      sema_down(&(parent -> sema));
+      printf("#Parent done with sema down on %d\n\n", parent-> my_pid); 
+
+      status = child -> status;
+      plist_remove_helper(&pl, child->my_pid);
+
+      printf("#Removed %d\n\n", child ->my_pid);
+
+        printf("# list after removing %d\n\n", child->my_pid);
+      process_print_list();
+      free(child);
+   }
+   else if(parent != NULL && cur->tid == 1){
+      child -> status_needed = true;
+      sema_down(&(main_sema));
+      plist_remove_helper(&pl, child->my_pid);
+      free(child);
+   }
+
+   
 
    debug("%s#%d: process_wait(%d) ENTERED\n",
          cur->name, cur->tid, child_id);
@@ -247,6 +282,8 @@ int process_wait(int child_id)
    debug("%s#%d: process_wait(%d) RETURNS %d\n",
          cur->name, cur->tid, child_id, status);
 
+
+   printf("#Status: %d\n\n", status);
    return status;
 }
 
@@ -263,16 +300,40 @@ int process_wait(int child_id)
 */
 
 void process_cleanup(void)
-{
+{ 
+   printf("#\n process_cleanup is running...\n\n");
    struct thread *cur = thread_current();
    uint32_t *pd = cur->pagedir;
    int status = -1;
-   struct process* removed_process = plist_remove_helper(&pl, cur->tid);
-   if(removed_process != NULL){
-      status = removed_process->status;
-      free(removed_process);
+   struct process* child = plist_find_by_pid(&pl, cur -> tid);
+   struct process* parent = plist_find_by_pid(&pl, child -> parent_pid);
+   bool parent_alive = (parent != NULL && parent->alive);
+
+   if(child != NULL && (child->status_needed || parent_alive))
+   {
+      status = child -> status;
+      struct process* parent = plist_find_by_pid(&pl, child->parent_pid);
+
+      printf("#Child calling sema up on %d\n\n", parent-> my_pid);
+      process_print_list();
+      sema_up(&(parent->sema));
+      printf("#Child done with sema up on %d\n\n", parent-> my_pid); 
+
+      
    }
- 
+   else if(parent == NULL && child->parent_pid == 1){
+      printf("#\n Parent is main...\n\n");
+      process_print_list();
+      sema_up(&main_sema);
+      
+   }
+   else{
+      printf("#\n Parent is not alive or parent doesn't need my status...\n\n");
+      process_print_list();
+      plist_remove_helper(&pl, child->my_pid);
+      free(child);
+   }
+
    debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
 
    /* Later tests DEPEND on this output to work correct. You will have
