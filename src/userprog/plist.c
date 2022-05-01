@@ -99,8 +99,7 @@ void plist_print(struct plist *pl)
     lock_acquire(&pl->lock);
     const int number_of_chars = 73;
 
-    putchar('\n');
-    printf("%-15s%-15s%-15s%-15s%-15s\n", "PID", "Alive",
+    printf("# \n %-15s%-15s%-15s%-15s%-15s\n", "PID", "Alive",
            "Status", "Parent id", "Status needed");
     for (int k = 0; k < number_of_chars; k++)
         putchar('=');
@@ -109,8 +108,7 @@ void plist_print(struct plist *pl)
     {
         if (pl->content[i] != NULL)
         {
-            putchar('\n');
-            printf("%d) %-12d | %-12d | %-12d | %-12d | %-12d\n", i+1,
+            printf("# \n %d) %-12d | %-12d | %-12d | %-12d | %-12d\n", i+1,
                                             pl->content[i]->my_pid,
                                             pl->content[i]->alive,
                                             pl->content[i]->status,
@@ -119,7 +117,7 @@ void plist_print(struct plist *pl)
         }
     }
     lock_release(&pl->lock);
-    printf("\n\n");
+    printf("# \n\n");
 }
 
 
