@@ -245,14 +245,16 @@ int process_wait(int child_id)
    int status = -1;
    printf("#\n process_wait is running...\n\n");
    struct thread *cur = thread_current();
-   printf("#Parent PID: %d\n# Child PID: %d \n", cur->tid, child_id);
+   printf("# Parent PID: %d\n# Child PID: %d \n", cur->tid, child_id);
    process_print_list();
 
    struct process* parent = plist_find_by_pid(&pl, cur -> tid);
    struct process* child = plist_find_by_pid(&pl, child_id);
 
    if(parent != NULL){
-
+      printf("#NOT Main\n\n");
+      if(child == NULL)
+         printf("Child is NULL\n");
       child -> status_needed = true;
       printf("#Parent sema down on %d\n\n", parent-> my_pid);
       sema_down(&(parent -> sema));
@@ -263,14 +265,19 @@ int process_wait(int child_id)
 
       printf("#Removed %d\n\n", child ->my_pid);
 
-        printf("# list after removing %d\n\n", child->my_pid);
+      printf("# list after removing %d\n\n", child->my_pid);
       process_print_list();
       free(child);
    }
-   else if(parent != NULL && cur->tid == 1){
+   else if(cur->tid == 1){
+      printf("# Main thread\n\n");
       child -> status_needed = true;
       sema_down(&(main_sema));
+      printf("# Main thread Done\n\n");
+      process_print_list();
+      status = child -> status;
       plist_remove_helper(&pl, child->my_pid);
+      process_print_list();
       free(child);
    }
 
@@ -283,7 +290,7 @@ int process_wait(int child_id)
          cur->name, cur->tid, child_id, status);
 
 
-   printf("#Status: %d\n\n", status);
+   printf("# Status: %d\n\n", status);
    return status;
 }
 
@@ -303,27 +310,31 @@ void process_cleanup(void)
 { 
    printf("#\n process_cleanup is running...\n\n");
    struct thread *cur = thread_current();
+   printf("#Process %d\n\n", cur->tid);
+   process_print_list();
    uint32_t *pd = cur->pagedir;
    int status = -1;
    struct process* child = plist_find_by_pid(&pl, cur -> tid);
    struct process* parent = plist_find_by_pid(&pl, child -> parent_pid);
    bool parent_alive = (parent != NULL && parent->alive);
 
-   if(child != NULL && (child->status_needed || parent_alive))
+   printf("#\n Parent is %d...\n\n", parent_alive);
+
+   if(parent_alive)
    {
+      printf("#\n Parent is not main...\n\n");
       status = child -> status;
       struct process* parent = plist_find_by_pid(&pl, child->parent_pid);
 
-      printf("#Child calling sema up on %d\n\n", parent-> my_pid);
+      printf("#Child calling sema up on parent %d\n\n", parent-> my_pid);
       process_print_list();
       sema_up(&(parent->sema));
-      printf("#Child done with sema up on %d\n\n", parent-> my_pid); 
+      printf("#Child done with sema up on parent %d\n\n", parent-> my_pid); 
 
       
    }
    else if(parent == NULL && child->parent_pid == 1){
       printf("#\n Parent is main...\n\n");
-      process_print_list();
       sema_up(&main_sema);
       
    }
