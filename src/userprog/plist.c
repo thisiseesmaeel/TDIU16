@@ -97,18 +97,18 @@ pl_value_t plist_remove_helper(struct plist* pl, pid_t pid){
 void plist_print(struct plist *pl)
 {
     lock_acquire(&pl->lock);
-    const int number_of_chars = 73;
+    const int number_of_chars = 95;
 
-    printf("# \n %-15s%-15s%-15s%-15s%-15s\n", "PID", "Alive",
+    printf("# %-16s%-16s%-16s%-16s%-16s%-16s\n", "Index", "PID", "Alive",
            "Status", "Parent id", "Status needed");
     for (int k = 0; k < number_of_chars; k++)
         putchar('=');
-
+    putchar('\n');
     for (int i = 0; i < PLIST_SIZE; i++)
     {
         if (pl->content[i] != NULL)
         {
-            printf("# \n %d) %-12d | %-12d | %-12d | %-12d | %-12d\n", i+1,
+            printf("# %-13d | %-13d | %-13d | %-13d | %-13d | %-13d\n", i+1,
                                             pl->content[i]->my_pid,
                                             pl->content[i]->alive,
                                             pl->content[i]->status,
