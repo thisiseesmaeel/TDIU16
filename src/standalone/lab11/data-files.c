@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
+//Vi skapar lås här
+struct lock lock;
+
 /**
  * Denna struktur representerar innehållet i vår (stora) datafil.
  */
@@ -31,11 +35,12 @@ void data_init(void) NO_STEP {
 // redan råkar vara öppnad ger funktionen tillbaka en pekare till instansen som
 // redan var öppen. Annars laddas filen in i RAM.
 struct data_file *data_open(int file) {
+  lock_acquire(&lock);
   struct data_file *result = open_files[file];
   if (result == NULL) {
     // Skapa en ny data_file.
     result = malloc(sizeof(struct data_file));
-    result->open_count = 0;
+    result->open_count = 0; // Ska detta vara 0????!
     result->id = file;
 
     // Simulera att vi läser in data...
@@ -51,12 +56,14 @@ struct data_file *data_open(int file) {
 
   result->open_count++;
 
+  lock_release(&lock);
   return result;
 }
 
 // Stäng en datafil. Om ingen annan har filen öppen ska filen avallokeras för
 // att spara minne.
 void data_close(struct data_file *file) {
+  lock_acquire(&lock);
   int open_count = --file->open_count;
   if (open_count <= 0) {
     // Ingen har filen öppen längre. Då kan vi ta bort den!
@@ -64,6 +71,7 @@ void data_close(struct data_file *file) {
     free(file->data);
     free(file);
   }
+  lock_release(&lock);
 }
 
 
@@ -86,6 +94,7 @@ void thread_main(int *file_id) {
 }
 
 int main(void) {
+  lock_init(&lock);
   sema_init(&data_sema, 0);
   data_init();
 
