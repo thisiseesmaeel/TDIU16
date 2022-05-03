@@ -99,7 +99,7 @@ void plist_print(struct plist *pl)
     lock_acquire(&pl->lock);
     const int number_of_chars = 95;
 
-    printf("# %-16s%-16s%-16s%-16s%-16s%-16s\n", "Index", "PID", "Alive",
+    printf("# %-16s%-16s%-16s%-16s%-16s%-16s\n# ", "Index", "PID", "Alive",
            "Status", "Parent id", "Status needed");
     for (int k = 0; k < number_of_chars; k++)
         putchar('=');
@@ -117,7 +117,7 @@ void plist_print(struct plist *pl)
         }
     }
     lock_release(&pl->lock);
-    printf("# \n\n");
+    printf("# \n#\n");
 }
 
 
