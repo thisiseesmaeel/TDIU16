@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-//Vi skapar lås här
+//Global lock for open_file list
 struct lock lock;
 
 /**
@@ -20,6 +20,9 @@ struct data_file {
 
   // Data i filen.
   char *data;
+
+  // Private lock for evrey data
+  struct lock data_lock;
 };
 
 // Håll koll på den fil vi har öppnat. Om ingen fil är öppen är denna variabel NULL.
@@ -40,7 +43,8 @@ struct data_file *data_open(int file) {
   if (result == NULL) {
     // Skapa en ny data_file.
     result = malloc(sizeof(struct data_file));
-    result->open_count = 0; // Ska detta vara 0????!
+    lock_init(&(result->data_lock));
+    result->open_count = 0;
     result->id = file;
 
     // Simulera att vi läser in data...
@@ -63,7 +67,7 @@ struct data_file *data_open(int file) {
 // Stäng en datafil. Om ingen annan har filen öppen ska filen avallokeras för
 // att spara minne.
 void data_close(struct data_file *file) {
-  lock_acquire(&lock);
+  lock_acquire(&file->data_lock);
   int open_count = --file->open_count;
   if (open_count <= 0) {
     // Ingen har filen öppen längre. Då kan vi ta bort den!
@@ -71,7 +75,7 @@ void data_close(struct data_file *file) {
     free(file->data);
     free(file);
   }
-  lock_release(&lock);
+  lock_release(&file->data_lock);
 }
 
 
