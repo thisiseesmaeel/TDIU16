@@ -23,7 +23,7 @@
 #include "userprog/plist.h"
 
 static struct plist pl;
-struct semaphore main_sema;
+//struct semaphore main_sema;
 
 /* HACK defines code you must remove and implement in a proper way */
 #define HACK
@@ -33,7 +33,6 @@ struct semaphore main_sema;
 void process_init(void)
 {
    plist_init(&pl);
-   sema_init(&main_sema, 0);
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -248,38 +247,24 @@ int process_wait(int child_id)
    printf("# Parent PID: %d\n# Child PID: %d \n", cur->tid, child_id);
    process_print_list();
 
-   struct process* parent = plist_find_by_pid(&pl, cur -> tid);
    struct process* child = plist_find_by_pid(&pl, child_id);
 
-   if(parent != NULL){
-      printf("# NOT Main\n\n");
-      if(child == NULL)
-         printf("# Child is NULL\n");
-      child -> status_needed = true;
-      printf("# Parent sema down on %d\n\n", parent-> my_pid);
-      sema_down(&(parent -> sema));
-      printf("# Parent done with sema down on %d\n\n", parent-> my_pid); 
+   if(child == NULL)
+      printf("# Child is NULL\n");
+   child -> status_needed = true;
+   printf("# Parent call sema down on child %d\n\n", child -> my_pid);
+   sema_down(&(child -> sema));
+   printf("# Parent done with sema down on child %d\n\n", child-> my_pid); 
 
-      status = child -> status;
-      plist_remove_helper(&pl, child->my_pid);
+   status = child -> status;
+   plist_remove_helper(&pl, child->my_pid);
 
-      printf("# Removed %d\n\n", child ->my_pid);
+   printf("# Removed %d\n\n", child ->my_pid);
 
-      printf("# list after removing %d\n\n", child->my_pid);
-      process_print_list();
-      free(child);
-   }
-   else if(cur->tid == 1){
-      printf("# Main thread\n\n");
-      child -> status_needed = true;
-      sema_down(&(main_sema));
-      printf("# Main thread Done\n\n");
-      process_print_list();
-      status = child -> status;
-      plist_remove_helper(&pl, child->my_pid);
-      process_print_list();
-      free(child);
-   }
+   printf("# list after removing %d\n\n", child->my_pid);
+   process_print_list();
+   free(child);
+
 
    
 
@@ -316,33 +301,33 @@ void process_cleanup(void)
    int status = -1;
    struct process* child = plist_find_by_pid(&pl, cur -> tid);
    struct process* parent = plist_find_by_pid(&pl, child -> parent_pid);
-   bool parent_alive = (parent != NULL && parent->alive);
 
-   printf("# \n Parent is %d...\n\n", parent_alive);
-
-   if(parent_alive)
+   if((parent != NULL && parent->alive) || (child->parent_pid == 1))
    {
-      printf("# \n Parent is not main...\n\n");
       status = child -> status;
-      struct process* parent = plist_find_by_pid(&pl, child->parent_pid);
-
-      printf("# Child calling sema up on parent %d\n\n", parent-> my_pid);
+      printf("# Child process %d calling sema up\n\n", child -> my_pid);
       process_print_list();
-      sema_up(&(parent->sema));
-      printf("# Child done with sema up on parent %d\n\n", parent-> my_pid); 
-
-      
+      sema_up(&(child->sema));
+      printf("# Child process %d done with sema up\n\n", child -> my_pid);      
    }
-   else if(parent == NULL && child->parent_pid == 1){
-      printf("# \n Parent is main...\n\n");
-      sema_up(&main_sema);
+   // else if(parent == NULL && child->parent_pid == 1){
+   //    printf("# \n Parent is main...\n\n");
+   //    sema_up(&child->sema);
       
-   }
+   // }
    else{
       printf("# \n Parent is not alive or parent doesn't need my status...\n\n");
       process_print_list();
+      for(int i = 0; i < PLIST_SIZE; i++){
+         struct process* potential_child = plist_find(&pl, i);
+         if(potential_child != NULL && !potential_child -> alive && potential_child->parent_pid == child->my_pid){
+            plist_remove(&pl, i);
+            free(potential_child);
+         }
+      }
       plist_remove_helper(&pl, child->my_pid);
       free(child);
+      process_print_list();
    }
 
    debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
