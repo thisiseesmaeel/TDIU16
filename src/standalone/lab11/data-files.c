@@ -5,9 +5,8 @@
 #include <stdio.h>
 
 
-//Global lock for open_file list
-//struct lock lock;
-struct lock locks[2];
+// Global lock for open_file list
+struct lock lock;
 
 /**
  * Denna struktur representerar innehållet i vår (stora) datafil.
@@ -15,15 +14,15 @@ struct lock locks[2];
 struct data_file {
   // Hur många gånger har filen blivit öppnad?
   int open_count;
-
+  
   // Filens ID.
   int id;
-
+  
   // Data i filen.
   char *data;
-
-  // Private lock for evrey data
-  //struct lock data_lock;
+  
+  // Private lock for each data_file
+  struct lock data_lock;
 };
 
 // Håll koll på den fil vi har öppnat. Om ingen fil är öppen är denna variabel NULL.
@@ -35,62 +34,82 @@ void data_init(void) NO_STEP {
   open_files = malloc(sizeof(struct data_file *)*2);
 }
 
-// Öppna datafilen med nummer "file" och se till att den finns i RAM. Om den
-// redan råkar vara öppnad ger funktionen tillbaka en pekare till instansen som
-// redan var öppen. Annars laddas filen in i RAM.
-struct data_file *data_open(int file) {
-  //lock_acquire(&lock);
-
-  lock_acquire(&locks[file]);
-  printf("Locking %d in open\n", file);
-
-  struct data_file *result = open_files[file];
-  if (result == NULL) {
+struct data_file *create_new(int file){
     // Skapa en ny data_file.
-    result = malloc(sizeof(struct data_file));
-    //lock_init(&(result->data_lock));
-    result->open_count = 0;
+    struct data_file *result = malloc(sizeof(struct data_file));
+    lock_init(&(result->data_lock));
+    result->open_count = 1;
     result->id = file;
 
     // Simulera att vi läser in data...
     timer_msleep(100);
     if (file == 0)
-      result->data = strdup("File 0");
+        result->data = strdup("File 0");
     else
-      result->data = strdup("File 1");
+        result->data = strdup("File 1");
 
+    return result;
+}
+
+
+// Öppna datafilen med nummer "file" och se till att den finns i RAM. Om den
+// redan råkar vara öppnad ger funktionen tillbaka en pekare till instansen som
+// redan var öppen. Annars laddas filen in i RAM.
+struct data_file *data_open(int file) {
+  lock_acquire(&lock);
+
+  struct data_file *result = open_files[file];
+
+  if(result != NULL){
+    lock_acquire(&result->data_lock);
+
+    if(result->open_count > 0){ // If data_file's open_count is greater than 0 
+                                // we are safe to increment it and there is no need to load
+                                // the file to the RAM again (but there are some cases in which data_file is not NULL
+                                // but it is about to be NULL namely when its open_count is 0)
+        result->open_count++;
+        lock_release(&result->data_lock);
+    }
+    else
+    {
+        result = create_new(file);
+        // Spara data i "open_files".
+        open_files[file] = result;
+    }
+  }
+  else
+  {
+    result = create_new(file);
     // Spara data i "open_files".
     open_files[file] = result;
   }
 
-  result->open_count++;
-
-  lock_release(&locks[file]);
-  printf("Releasing %d in open\n", file);
-
-  //lock_release(&lock);
+  lock_release(&lock);
+  
   return result;
 }
 
 // Stäng en datafil. Om ingen annan har filen öppen ska filen avallokeras för
 // att spara minne.
-void data_close(struct data_file *file) {
-  //lock_acquire(&file->data_lock);
-  printf("Locking %d in close\n", file->id);
-
-  lock_acquire(&locks[file->id]);
-  
+void data_close(struct data_file *file)
+{
+  lock_acquire(&file->data_lock);
   int open_count = --file->open_count;
-  if (open_count <= 0) {
+
+  if (open_count <= 0)
+  {
     // Ingen har filen öppen längre. Då kan vi ta bort den!
+    lock_release(&file->data_lock);
+    lock_acquire(&lock);
     open_files[file->id] = NULL;
+    lock_release(&lock);
     free(file->data);
     free(file);
   }
-  
-  lock_release(&locks[file-> id]);
-  printf("Releasing %d in close\n", file->id);
-  //lock_release(&file->data_lock);
+  else 
+  {
+    lock_release(&file->data_lock);
+  }
 }
 
 
@@ -106,7 +125,6 @@ void data_close(struct data_file *file) {
 struct semaphore data_sema;
 
 void thread_main(int *file_id) {
-  //printf("file id %d\n", *file_id);
 
   struct data_file *f = data_open(*file_id);
   printf("Data: %s\n", f->data);
@@ -115,10 +133,7 @@ void thread_main(int *file_id) {
 }
 
 int main(void) {
-  //lock_init(&lock);
-
-  lock_init(&locks[0]);
-  lock_init(&locks[1]);
+  lock_init(&lock);
 
   sema_init(&data_sema, 0);
   data_init();
@@ -127,10 +142,10 @@ int main(void) {
   int one = 1;
   thread_new(&thread_main, &zero);
   thread_new(&thread_main, &one);
+ 
 
   thread_main(&zero);
 
-  printf("DEBUG\n");
   // Wait for other threads to be done.
   for (int i = 0; i < 3; i++)
     sema_down(&data_sema);
