@@ -90,20 +90,16 @@ void data_close(struct data_file *file)
 {
   lock_acquire(&file->data_lock);
   int open_count = --file->open_count;
+  lock_release(&file->data_lock);
 
   if (open_count <= 0)
   {
     // Ingen har filen öppen längre. Då kan vi ta bort den!
-    lock_release(&file->data_lock);
     lock_acquire(&lock);
     open_files[file->id] = NULL;
     lock_release(&lock);
     free(file->data);
     free(file);
-  }
-  else 
-  {
-    lock_release(&file->data_lock);
   }
 }
 
