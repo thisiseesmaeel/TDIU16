@@ -67,22 +67,17 @@ struct data_file *data_open(int file) {
                                 // we are safe to increment it and there is no need to load
                                 // the file to the RAM again (but there are some cases in which data_file is not NULL
                                 // but it is about to be NULL namely when its open_count is 0)
+        lock_release(&lock);
         result->open_count++;
         lock_release(&result->data_lock);
-    }
-    else
-    {
-        result = create_new(file);
-        // Spara data i "open_files".
-        open_files[file] = result;
-    }
+        return result;
+      }
+    lock_release(&result->data_lock);
   }
-  else
-  {
-    result = create_new(file);
-    // Spara data i "open_files".
-    open_files[file] = result;
-  }
+ 
+  result = create_new(file);
+  // Spara data i "open_files".
+  open_files[file] = result;
 
   lock_release(&lock);
   
