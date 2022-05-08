@@ -74,17 +74,15 @@ struct data_file *data_open(int file) {
         lock_release(&result->data_lock);
         return result;
       }
-      else
+      else                     // open_files[file] about to be NULL
       {
         lock_release(&result->data_lock);
         lock_release(&lock);
+        sema_down(&sema);         // Waiting to other thread set open_files[file] to NULL so we can open the file again
         result = create_new(file);
-
-        sema_down(&sema);
         lock_acquire(&lock);
         // Spara data i "open_files".
         open_files[file] = result;
-
         lock_release(&lock);
         return result;
       }
@@ -115,7 +113,8 @@ void data_close(struct data_file *file)
     lock_acquire(&lock);
     open_files[file->id] = NULL;
     lock_release(&lock);
-    sema_up(&sema);
+    sema_up(&sema);         // If there is other thread waiting to open the same file we make them wait
+                            // until we are done with setting NULL
     free(file->data);
     free(file);
   }
