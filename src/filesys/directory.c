@@ -138,6 +138,7 @@ dir_lookup (const struct dir *dir, const char *name,
    Returns true if successful, false on failure.
    Fails if NAME is invalid (i.e. too long) or a disk or memory
    error occurs. */
+   
 bool
 dir_add (struct dir *dir, const char *name, disk_sector_t inode_sector) 
 {
@@ -151,6 +152,7 @@ dir_add (struct dir *dir, const char *name, disk_sector_t inode_sector)
   /* Check NAME for validity. */
   if (*name == '\0' || strlen (name) > NAME_MAX)
     return false;
+
 
   /* Check that NAME is not in use. */
   if (lookup (dir, name, NULL, NULL))
