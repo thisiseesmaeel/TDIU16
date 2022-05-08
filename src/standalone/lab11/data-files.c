@@ -8,6 +8,8 @@
 // Global lock for open_file list
 struct lock lock;
 
+struct semaphore sema;
+
 /**
  * Denna struktur representerar innehållet i vår (stora) datafil.
  */
@@ -72,10 +74,25 @@ struct data_file *data_open(int file) {
         lock_release(&result->data_lock);
         return result;
       }
-    lock_release(&result->data_lock);
+      else
+      {
+        lock_release(&result->data_lock);
+        lock_release(&lock);
+        result = create_new(file);
+
+        sema_down(&sema);
+        lock_acquire(&lock);
+        // Spara data i "open_files".
+        open_files[file] = result;
+
+        lock_release(&lock);
+        return result;
+      }
+    
   }
  
   result = create_new(file);
+
   // Spara data i "open_files".
   open_files[file] = result;
 
@@ -98,6 +115,7 @@ void data_close(struct data_file *file)
     lock_acquire(&lock);
     open_files[file->id] = NULL;
     lock_release(&lock);
+    sema_up(&sema);
     free(file->data);
     free(file);
   }
@@ -125,7 +143,7 @@ void thread_main(int *file_id) {
 
 int main(void) {
   lock_init(&lock);
-
+  sema_init(&sema, 0);
   sema_init(&data_sema, 0);
   data_init();
 
