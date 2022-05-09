@@ -8,8 +8,6 @@
 // Global lock for open_file list
 struct lock lock;
 
-struct semaphore sema;
-
 /**
  * Denna struktur representerar innehållet i vår (stora) datafil.
  */
@@ -64,29 +62,10 @@ struct data_file *data_open(int file) {
 
   if(result != NULL){
     lock_acquire(&result->data_lock);
-
-    if(result->open_count > 0){ // If data_file's open_count is greater than 0 
-                                // we are safe to increment it and there is no need to load
-                                // the file to the RAM again (but there are some cases in which data_file is not NULL
-                                // but it is about to be NULL namely when its open_count is 0)
-        lock_release(&lock);
-        result->open_count++;
-        lock_release(&result->data_lock);
-        return result;
-      }
-      else                     // open_files[file] about to be NULL
-      {
-        lock_release(&result->data_lock);
-        lock_release(&lock);
-        sema_down(&sema);         // Waiting to other thread set open_files[file] to NULL so we can open the file again
-        result = create_new(file);
-        lock_acquire(&lock);
-        // Spara data i "open_files".
-        open_files[file] = result;
-        lock_release(&lock);
-        return result;
-      }
-    
+    result->open_count++;
+    lock_release(&result->data_lock);
+    lock_release(&lock);
+    return result;
   }
  
   result = create_new(file);
@@ -104,20 +83,27 @@ struct data_file *data_open(int file) {
 void data_close(struct data_file *file)
 {
   lock_acquire(&file->data_lock);
-  int open_count = --file->open_count;
-  lock_release(&file->data_lock);
+  if(file->open_count == 1){
+    lock_release(&file->data_lock);
 
-  if (open_count <= 0)
-  {
-    // Ingen har filen öppen längre. Då kan vi ta bort den!
     lock_acquire(&lock);
-    open_files[file->id] = NULL;
+    lock_acquire(&file->data_lock);
+    if(file->open_count == 1){
+      // Ingen har filen öppen längre. Då kan vi ta bort den!
+      open_files[file->id] = NULL;
+      lock_release(&file->data_lock);
+      free(file->data);
+      free(file);
+      lock_release(&lock);
+      return;
+    }
+    file->open_count--;
+    lock_release(&file->data_lock);
     lock_release(&lock);
-    sema_up(&sema);         // If there is other thread waiting to open the same file we make them wait
-                            // until we are done with setting NULL
-    free(file->data);
-    free(file);
+    return;
   }
+  file->open_count--;
+  lock_release(&file->data_lock);
 }
 
 
@@ -142,7 +128,6 @@ void thread_main(int *file_id) {
 
 int main(void) {
   lock_init(&lock);
-  sema_init(&sema, 0);
   sema_init(&data_sema, 0);
   data_init();
 
