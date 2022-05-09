@@ -301,13 +301,22 @@ void process_cleanup(void)
    int status = -1;
    
    struct process* child = plist_find_by_pid(&pl, cur -> tid);
-   if(child != NULL){
+   if(child != NULL){         
+
+      /* Later tests DEPEND on this output to work correct. You will have
+      * to find the actual exit status in your process list. It is
+      * important to do this printf BEFORE you tell the parent process
+      * that you exit.  (Since the parent may be the main() function,
+      * that may sometimes poweroff as soon as process_wait() returns,
+      * possibly before the printf is completed.)
+      */
+      status = child -> status;
+      printf("%s: exit(%d)\n", thread_name(), status);
       
       struct process* parent = plist_find_by_pid(&pl, child -> parent_pid);
 
       if((parent != NULL && parent->alive) || (child->parent_pid == 1))
       {
-         status = child -> status;
          //printf("# Child process %d calling sema up\n# \n", child -> my_pid);
          process_print_list();
          sema_up(&(child->sema));
@@ -331,15 +340,6 @@ void process_cleanup(void)
    
 
    debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
-
-   /* Later tests DEPEND on this output to work correct. You will have
-    * to find the actual exit status in your process list. It is
-    * important to do this printf BEFORE you tell the parent process
-    * that you exit.  (Since the parent may be the main() function,
-    * that may sometimes poweroff as soon as process_wait() returns,
-    * possibly before the printf is completed.)
-    */
-   printf("%s: exit(%d)\n", thread_name(), status);
 
    /* Destroy the current process's page directory and switch back
       to the kernel-only page directory. */

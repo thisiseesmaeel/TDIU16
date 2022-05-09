@@ -74,6 +74,9 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_READ:
     {
+      // process_exit(-1);
+      // thread_exit();
+      // break;
       f->eax = -1;  // As default returns -1
 
       if (esp[1] == STDIN_FILENO) // Reading from standard input (keyboard)
@@ -99,9 +102,16 @@ syscall_handler (struct intr_frame *f)
       else if(esp[1] > 1) // Reading from a file
       {
         struct file *file_ptr= retrieve_file(esp[1]);
-        if (file_ptr != NULL)
+        if (file_ptr != NULL && (file_tell(file_ptr) + esp[3] > file_length(file_ptr))){
           f->eax = file_read(file_ptr, (char *)esp[2], esp[3]);
+        }
       }
+      if((int)f->eax == -1){
+        process_exit(-1);
+        thread_exit();
+      }
+
+      printf("eax is %d\n", f->eax);
       break;
     }
     
