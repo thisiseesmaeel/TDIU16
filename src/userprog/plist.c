@@ -97,7 +97,7 @@ pl_value_t plist_remove_helper(struct plist* pl, pid_t pid){
 void plist_print(struct plist *pl)
 {
     lock_acquire(&pl->lock);
-    const int number_of_chars = 95;
+/*     const int number_of_chars = 95;
 
     printf("# %-16s%-16s%-16s%-16s%-16s%-16s\n# ", "Index", "PID", "Alive",
            "Status", "Parent id", "Status needed");
@@ -116,8 +116,8 @@ void plist_print(struct plist *pl)
                                             pl->content[i]->status_needed);
         }
     }
+    printf("# \n# \n"); */
     lock_release(&pl->lock);
-    printf("# \n#\n");
 }
 
 

@@ -211,7 +211,7 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_EXEC:
     {
-      printf("# \nSYS_EXEC IS RUNNING!\n");
+      //printf("# \nSYS_EXEC IS RUNNING!\n");
       f->eax = process_execute( (char *) esp[1]);
 
       break;
@@ -225,14 +225,14 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_SLEEP:
     {
-      printf ("# \nSYS_SLEEP is running!\n");
+      //printf ("# \nSYS_SLEEP is running!\n");
       timer_msleep(esp[1]);
       break;
     }
 
     case SYS_WAIT:
     {
-      printf ("# \nSYS_WAIT is running!\n");
+      //printf ("# \nSYS_WAIT is running!\n");
       f -> eax = process_wait( (int) esp[1]);
       break;
     }

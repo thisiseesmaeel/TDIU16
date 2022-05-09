@@ -209,6 +209,7 @@ inode_close (struct inode *inode)
       free(inode);
       return;
     }
+    lock_release(&inode->lock);
 }
 
 /* Marks INODE to be deleted when it is closed by the last caller who
