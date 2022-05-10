@@ -59,7 +59,7 @@ byte_to_sector (const struct inode *inode, off_t pos)
 /* List of open inodes, so that opening a single inode twice
    returns the same `struct inode'. */
 static struct list open_inodes;
-struct lock list_lock;
+static struct lock list_lock;
 
 /* Initializes the inode module. */
 void
@@ -142,7 +142,6 @@ inode_open (disk_sector_t sector)
   }
 
   list_push_front (&open_inodes, &inode->elem);
-  lock_release(&list_lock);
   
   /* Initialize. */
   inode->sector = sector;
@@ -152,6 +151,7 @@ inode_open (disk_sector_t sector)
   
   disk_read (filesys_disk, inode->sector, &inode->data);
   
+  lock_release(&list_lock);
   return inode;
 }
 

@@ -74,11 +74,8 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_READ:
     {
-      // process_exit(-1);
-      // thread_exit();
-      // break;
       f->eax = -1;  // As default returns -1
-
+      
       if (esp[1] == STDIN_FILENO) // Reading from standard input (keyboard)
       {
         int read_char_counter = 0;
@@ -101,17 +98,26 @@ syscall_handler (struct intr_frame *f)
       }
       else if(esp[1] > 1) // Reading from a file
       {
-        struct file *file_ptr= retrieve_file(esp[1]);
-        if (file_ptr != NULL && (file_tell(file_ptr) + esp[3] > file_length(file_ptr))){
-          f->eax = file_read(file_ptr, (char *)esp[2], esp[3]);
+        if(!((int)esp[1] > FILE_TABLE_SIZE)){
+          struct file *file_ptr= retrieve_file(esp[1]);
+          if(file_ptr != NULL){
+            printf("# IS NOT NULL\n");
+            if((file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){
+              printf("# VALID SIZE TO READ\n");
+            }
+          }
+          if (file_ptr != NULL && (file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){ 
+            int result = file_read(file_ptr, (char *)esp[2], esp[3]);
+            printf("# result %d \n", result);
+            f->eax = result;
+          }
         }
       }
       if((int)f->eax == -1){
         process_exit(-1);
         thread_exit();
       }
-
-      printf("eax is %d\n", f->eax);
+      
       break;
     }
     
@@ -137,6 +143,11 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:
     {
       f->eax = false;
+      if((char *) esp[1] == NULL){
+        process_exit(-1);
+        thread_exit();
+        break;
+      }
       
       if(filesys_create((char *)esp[1], esp[2]))
         f->eax = true;
@@ -146,6 +157,10 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_OPEN:
     {
+      if((char *) esp[1] == NULL){
+        f->eax = -1;
+        break;
+      }
       struct file* file_ptr = filesys_open((char *)esp[1]);
 
       if(file_ptr == NULL)
@@ -158,11 +173,16 @@ syscall_handler (struct intr_frame *f)
         if((int)f->eax == -1) // Close the file if it cannot add it to process table
           file_close(file_ptr);
       }
+
       break;
     }
 
     case SYS_CLOSE:
     {
+      if(((int)esp[1] > FILE_TABLE_SIZE)){
+         f->eax = -1;
+         break;
+      }
       struct thread* current_thread = thread_current();
       struct file* file_ptr = retrieve_file(esp[1]);
 

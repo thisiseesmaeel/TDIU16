@@ -14,3 +14,5 @@ test_main (void)
   read (handle, (char *) 0xc0100000, 123);
   fail ("should not have survived read()");
 }
+
+

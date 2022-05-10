@@ -8,7 +8,7 @@
 
 static struct file *free_map_file;   /* Free map file. */
 static struct bitmap *free_map;      /* Free map, one bit per disk sector. */
-struct lock map_lock;
+static struct lock map_lock;
 
 /* Initializes the free map. */
 void
@@ -45,6 +45,7 @@ free_map_allocate (size_t cnt, disk_sector_t *sectorp)
     *sectorp = sector;
   
   lock_release(&map_lock);
+  
   return sector != BITMAP_ERROR;
 }
 
