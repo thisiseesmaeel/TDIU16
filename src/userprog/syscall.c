@@ -100,15 +100,15 @@ syscall_handler (struct intr_frame *f)
       {
         if(!((int)esp[1] > FILE_TABLE_SIZE)){
           struct file *file_ptr= retrieve_file(esp[1]);
-          if(file_ptr != NULL){
-            printf("# IS NOT NULL\n");
-            if((file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){
-              printf("# VALID SIZE TO READ\n");
-            }
-          }
+          // if(file_ptr != NULL){
+          //   printf("# IS NOT NULL\n");
+          //   if((file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){
+          //     printf("# VALID SIZE TO READ\n");
+          //   }
+          // }
           if (file_ptr != NULL && (file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){ 
             int result = file_read(file_ptr, (char *)esp[2], esp[3]);
-            printf("# result %d \n", result);
+            //printf("# result %d \n", result);
             f->eax = result;
           }
         }

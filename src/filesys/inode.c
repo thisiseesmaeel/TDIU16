@@ -125,12 +125,15 @@ inode_open (disk_sector_t sector)
        e = list_next (e)) 
     {
       inode = list_entry (e, struct inode, elem);
-      if (inode->sector == sector && inode->open_cnt > 0) //???????????
+      lock_acquire(&inode->lock);
+      if (inode->sector == sector)
         {
           inode_reopen (inode);
+          lock_release(&inode->lock);
           lock_release(&list_lock);
           return inode; 
         }
+      lock_release(&inode->lock);
     }
   
   /* Allocate memory. */
@@ -161,9 +164,7 @@ inode_reopen (struct inode *inode)
 {
   if (inode != NULL)
   {
-    lock_acquire(&inode->lock); // ???
     inode->open_cnt++;
-    lock_release(&inode->lock);
   }
   return inode;
 }
@@ -181,22 +182,28 @@ inode_get_inumber (const struct inode *inode)
 void
 inode_close (struct inode *inode) 
 {
-  /* Ignore null pointer. */
+   /* Ignore null pointer. */
   if (inode == NULL)
     return;
-
   lock_acquire(&inode->lock);
+    
   /* Release resources if this was the last opener. */
-  if (--inode->open_cnt == 0)
-    { 
-      /* Remove from inode list. */
+  if (inode->open_cnt == 1)
+    {
       lock_release(&inode->lock);
 
       lock_acquire(&list_lock);
-      list_remove (&inode->elem);
-      lock_release(&list_lock);    // => deadlock????
-
-      
+      lock_acquire(&inode->lock);
+      if (inode->open_cnt == 1){
+        /* Remove from inode list. */
+        list_remove (&inode->elem);
+        //inode_remove(inode);
+      }
+      else{
+        inode->open_cnt--;
+      }
+      lock_release(&inode->lock);
+      lock_release(&list_lock);
  
       /* Deallocate blocks if the file is marked as removed. */
       if (inode->removed) 
@@ -204,12 +211,12 @@ inode_close (struct inode *inode)
           free_map_release (inode->sector, 1);
           free_map_release (inode->data.start,
                             bytes_to_sectors (inode->data.length)); 
+          free (inode);
         }
-
-      free(inode);
       return;
     }
-    lock_release(&inode->lock);
+  inode->open_cnt--;
+  lock_release(&inode->lock);
 }
 
 /* Marks INODE to be deleted when it is closed by the last caller who
@@ -218,9 +225,7 @@ void
 inode_remove (struct inode *inode) 
 {
   ASSERT (inode != NULL);
-  lock_acquire(&inode->lock);
   inode->removed = true;
-  lock_release(&inode->lock);
 }
 
 /* Reads SIZE bytes from INODE into BUFFER, starting at position OFFSET.
