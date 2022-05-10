@@ -197,7 +197,6 @@ inode_close (struct inode *inode)
       if (inode->open_cnt == 1){
         /* Remove from inode list. */
         list_remove (&inode->elem);
-        //inode_remove(inode);
       }
       else{
         inode->open_cnt--;
@@ -225,7 +224,9 @@ void
 inode_remove (struct inode *inode) 
 {
   ASSERT (inode != NULL);
+  lock_acquire(&inode->lock);
   inode->removed = true;
+  lock_release(&inode->lock);
 }
 
 /* Reads SIZE bytes from INODE into BUFFER, starting at position OFFSET.

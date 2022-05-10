@@ -186,7 +186,7 @@ start_process(struct parameters_to_start_process *parameters)
       struct process *child_process = malloc(sizeof(struct process));
       child_process->alive = true;
       child_process->status_needed = false;
-      child_process->status = -1;
+      child_process->status = 0;
       child_process->my_pid = thread_tid();
       child_process->parent_pid = parameters->parent_tid;
       sema_init(&(child_process -> sema), 0);
