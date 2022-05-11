@@ -75,9 +75,9 @@ dir_close (struct dir *dir)
 {
   if (dir != NULL)
     {
-      lock_acquire(&dir->lock);
+      //lock_acquire(&dir->lock);
       inode_close (dir->inode);
-      lock_release(&dir->lock);
+      //lock_release(&dir->lock);
       free (dir);
     }
 }
@@ -131,10 +131,14 @@ dir_lookup (const struct dir *dir, const char *name,
   ASSERT (dir != NULL);
   ASSERT (name != NULL);
 
+  lock_acquire(&dir->lock);
+
   if (lookup (dir, name, &e, NULL))
     *inode = inode_open (e.inode_sector);
   else
     *inode = NULL;
+
+  lock_release(&dir->lock);
 
   return *inode != NULL;
 }
@@ -236,6 +240,8 @@ dir_readdir (struct dir *dir, char name[NAME_MAX + 1])
 {
   struct dir_entry e;
 
+  lock_acquire(&dir->lock);
+
   while (inode_read_at (dir->inode, &e, sizeof e, dir->pos) == sizeof e) 
     {
       dir->pos += sizeof e;
@@ -245,5 +251,8 @@ dir_readdir (struct dir *dir, char name[NAME_MAX + 1])
           return true;
         } 
     }
+
+  lock_release(&dir->lock);
+
   return false;
 }
