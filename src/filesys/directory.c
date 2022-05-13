@@ -40,6 +40,7 @@ dir_open (struct inode *inode)
   struct dir *dir = calloc (1, sizeof *dir);
   if (inode != NULL && dir != NULL)
     {
+      //lock_acquire(&inode->lock);
       dir->inode = inode;
       dir->pos = 0;
       lock_init(&dir->lock);
@@ -75,9 +76,9 @@ dir_close (struct dir *dir)
 {
   if (dir != NULL)
     {
-      //lock_acquire(&dir->lock);
+      lock_acquire(&dir->lock);
       inode_close (dir->inode);
-      //lock_release(&dir->lock);
+      lock_release(&dir->lock);
       free (dir);
     }
 }
@@ -189,7 +190,7 @@ dir_add (struct dir *dir, const char *name, disk_sector_t inode_sector)
   success = inode_write_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
 
  done:
- lock_release(&dir->lock);
+  lock_release(&dir->lock);
   return success;
 }
 
