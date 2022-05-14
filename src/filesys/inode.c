@@ -228,7 +228,6 @@ inode_close (struct inode *inode)
       free (inode);
       
       lock_release(&list_lock);
-
       return;
     }
   inode->open_cnt--;
