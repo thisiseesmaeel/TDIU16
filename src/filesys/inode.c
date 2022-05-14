@@ -44,6 +44,14 @@ struct inode
     bool removed;                       /* True if deleted, false otherwise. */
     struct inode_disk data;             /* Inode content. */
     struct lock lock;
+
+
+    /////////////////////////////////////////////////////////////////////////
+    struct lock rw_lock;
+    struct condition rw_cond;
+    int read_cnt;
+    bool writing;
+    /////////////////////////////////////////////////////////////////////////
   };
 
 
@@ -65,7 +73,7 @@ byte_to_sector (const struct inode *inode, off_t pos)
    returns the same `struct inode'. */
 static struct list open_inodes;
 static struct lock list_lock;
-static struct lock global_lock;
+//static struct lock global_lock;
 int size = 0;
 /* Initializes the inode module. */
 void
@@ -73,7 +81,7 @@ inode_init (void)
 {
   list_init (&open_inodes);
   lock_init(&list_lock);
-  lock_init(&global_lock);
+  //lock_init(&global_lock);
   dir_init();
 }
 
@@ -157,10 +165,21 @@ inode_open (disk_sector_t sector)
   inode->sector = sector;
   inode->open_cnt = 1;
   inode->removed = false;
+
+  //////////////////////////////////////////////////////////////////////////////////
+  inode->writing = false;
+  inode->read_cnt = 0;
+//////////////////////////////////////////////////////////////////////////////////
   lock_init(&inode->lock);
   
   disk_read (filesys_disk, inode->sector, &inode->data);
   
+//////////////////////////////////////////////////////////////////////////////////
+  lock_init(&inode->rw_lock);
+  cond_init(&inode->rw_cond);
+//////////////////////////////////////////////////////////////////////////////////
+
+
   lock_release(&list_lock);
   return inode;
 }
@@ -293,7 +312,19 @@ inode_read_at (struct inode *inode, void *buffer_, off_t size, off_t offset)
   off_t bytes_read = 0;
   uint8_t *bounce = NULL;
   
-  lock_acquire(&global_lock);
+///////////////////////////////////////////////////////////////////////
+  lock_acquire(&inode->rw_lock);
+  while(inode->writing)
+  {
+    cond_wait(&inode->rw_cond, &inode->rw_lock);
+  }
+  ++inode->read_cnt;
+  lock_release(&inode->rw_lock);
+///////////////////////////////////////////////////////////////////////
+
+
+
+  //lock_acquire(&global_lock);
   while (size > 0) 
     {
       /* Disk sector to read, starting byte offset within sector. */
@@ -336,7 +367,14 @@ inode_read_at (struct inode *inode, void *buffer_, off_t size, off_t offset)
     }
   free (bounce);
 
-  lock_release(&global_lock);
+  //lock_release(&global_lock);
+///////////////////////////////////////////////////////////////////////
+  lock_acquire(&inode->rw_lock);
+  inode->read_cnt--;
+  cond_broadcast(&inode->rw_cond, &inode->rw_lock);
+  lock_release(&inode->rw_lock);
+///////////////////////////////////////////////////////////////////////
+
   return bytes_read;
 }
 
@@ -353,7 +391,18 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
   off_t bytes_written = 0;
   uint8_t *bounce = NULL;
 
-  lock_acquire(&list_lock);
+  //lock_acquire(&list_lock);
+
+  ///////////////////////////////////////////////////////////////////////
+  lock_acquire(&inode->rw_lock);
+  while(inode->read_cnt || inode->writing)
+  {
+    cond_wait(&inode->rw_cond,&inode->rw_lock);
+  }
+  inode->writing = true;
+  lock_release(&inode->rw_lock);
+  ///////////////////////////////////////////////////////////////////////
+
   while (size > 0) 
     {
       /* Sector to write, starting byte offset within sector. */
@@ -403,7 +452,15 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
     }
   free (bounce);
 
-  lock_release(&list_lock);
+  //lock_release(&list_lock);
+
+///////////////////////////////////////////////////////////////////////
+  lock_acquire(&inode->rw_lock);
+  inode->writing = false;
+  cond_broadcast(&inode->rw_cond, &inode->rw_lock);
+  lock_release(&inode->rw_lock);
+///////////////////////////////////////////////////////////////////////
+
   return bytes_written;
 }
 
@@ -413,3 +470,4 @@ inode_length (const struct inode *inode)
 {
   return inode->data.length;
 }
+
