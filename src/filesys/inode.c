@@ -212,7 +212,7 @@ inode_close (struct inode *inode)
       else{
         inode->open_cnt--;
         lock_release(&inode->lock);
-        lock_acquire(&list_lock);
+        lock_release(&list_lock);
         return;
       }
  
