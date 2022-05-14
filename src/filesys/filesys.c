@@ -62,6 +62,7 @@ filesys_create (const char *name, off_t initial_size)
   dir_close (dir);
   
   lock_release(&mutex);
+  
   return success;
 }
 
