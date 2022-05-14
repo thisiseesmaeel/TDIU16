@@ -47,6 +47,7 @@ filesys_done (void)
 bool
 filesys_create (const char *name, off_t initial_size) 
 {
+  //lock_acquire(&mutex);
   disk_sector_t inode_sector = 0;
   struct dir *dir = dir_open_root ();
   bool success = (dir != NULL
@@ -96,7 +97,7 @@ filesys_remove (const char *name)
 {
   struct dir *dir = dir_open_root ();
   bool success = dir != NULL && dir_remove (dir, name);
-  dir_close (dir); 
+  dir_close (dir);
   
   return success;
 }

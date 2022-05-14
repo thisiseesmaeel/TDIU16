@@ -8,6 +8,11 @@
 #include "threads/malloc.h"
 #include "threads/synch.h"
 
+#include "filesys/directory.h"
+
+
+#include <stdio.h>
+#include "threads/thread.h"
 
 /* Identifies an inode. */
 #define INODE_MAGIC 0x494e4f44
@@ -60,17 +65,16 @@ byte_to_sector (const struct inode *inode, off_t pos)
    returns the same `struct inode'. */
 static struct list open_inodes;
 static struct lock list_lock;
-static struct lock read_lock;
-static struct lock write_lock;
-
+static struct lock global_lock;
+int size = 0;
 /* Initializes the inode module. */
 void
 inode_init (void) 
 {
   list_init (&open_inodes);
   lock_init(&list_lock);
-  lock_init(&read_lock);
-  lock_init(&write_lock);
+  lock_init(&global_lock);
+  dir_init();
 }
 
 /* Initializes an inode with LENGTH bytes of data and
@@ -128,16 +132,14 @@ inode_open (disk_sector_t sector)
   for (e = list_begin (&open_inodes); e != list_end (&open_inodes);
        e = list_next (e)) 
     {
+      
       inode = list_entry (e, struct inode, elem);
-      lock_acquire(&inode->lock);
       if (inode->sector == sector)
         {
-          lock_release(&inode->lock);
           inode_reopen (inode);
           lock_release(&list_lock);
           return inode; 
         }
-      lock_release(&inode->lock);
     }
   
   /* Allocate memory. */
@@ -145,11 +147,12 @@ inode_open (disk_sector_t sector)
   if (inode == NULL)
   {
     lock_release(&list_lock);
+    printf("# STACK OVERFLOW\n");
     return NULL;
   }
 
   list_push_front (&open_inodes, &inode->elem);
-  
+
   /* Initialize. */
   inode->sector = sector;
   inode->open_cnt = 1;
@@ -161,6 +164,7 @@ inode_open (disk_sector_t sector)
   lock_release(&list_lock);
   return inode;
 }
+
 
 /* Reopens and returns INODE. */
 struct inode *
@@ -217,6 +221,7 @@ inode_close (struct inode *inode)
           free_map_release (inode->data.start,
                             bytes_to_sectors (inode->data.length)); 
           free (inode);
+          printf("# REMOVED\n");
         }
       return;
     }
@@ -245,7 +250,7 @@ inode_read_at (struct inode *inode, void *buffer_, off_t size, off_t offset)
   off_t bytes_read = 0;
   uint8_t *bounce = NULL;
   
-  lock_acquire(&read_lock);
+  lock_acquire(&global_lock);
   while (size > 0) 
     {
       /* Disk sector to read, starting byte offset within sector. */
@@ -288,7 +293,7 @@ inode_read_at (struct inode *inode, void *buffer_, off_t size, off_t offset)
     }
   free (bounce);
 
-  lock_release(&read_lock);
+  lock_release(&global_lock);
   return bytes_read;
 }
 
@@ -305,7 +310,7 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
   off_t bytes_written = 0;
   uint8_t *bounce = NULL;
 
-  lock_acquire(&write_lock);
+  lock_acquire(&list_lock);
   while (size > 0) 
     {
       /* Sector to write, starting byte offset within sector. */
@@ -355,7 +360,7 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
     }
   free (bounce);
 
-  lock_release(&write_lock);
+  lock_release(&list_lock);
   return bytes_written;
 }
 
@@ -365,4 +370,3 @@ inode_length (const struct inode *inode)
 {
   return inode->data.length;
 }
-

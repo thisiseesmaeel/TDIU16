@@ -19,7 +19,6 @@
 #include "devices/timer.h"
 
 
-
 static void syscall_handler (struct intr_frame *);
 
 struct file* retrieve_file(int32_t );
@@ -108,11 +107,11 @@ syscall_handler (struct intr_frame *f)
           // }
           if (file_ptr != NULL && (file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){ 
             int result = file_read(file_ptr, (char *)esp[2], esp[3]);
-            //printf("# result %d \n", result);
             f->eax = result;
           }
         }
       }
+      
       if((int)f->eax == -1){
         process_exit(-1);
         thread_exit();
@@ -133,8 +132,10 @@ syscall_handler (struct intr_frame *f)
       else if(esp[1] > 1) // Writing to a file
       {
         struct file *file_ptr= retrieve_file(esp[1]);
-        if( file_ptr != NULL)
+        if( file_ptr != NULL) {
           f->eax = file_write(file_ptr, (char *)esp[2], esp[3]);
+         
+        } 
       }
 
       break;
@@ -151,7 +152,7 @@ syscall_handler (struct intr_frame *f)
       
       if(filesys_create((char *)esp[1], esp[2]))
         f->eax = true;
-      
+
       break;
     }
 

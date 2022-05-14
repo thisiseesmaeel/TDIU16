@@ -28,5 +28,6 @@ int main(void)
   {
     wait(pid[i]);
   }
+  
   exit(0);
 }
