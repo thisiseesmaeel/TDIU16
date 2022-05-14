@@ -210,9 +210,10 @@ inode_close (struct inode *inode)
       }
       else{
         inode->open_cnt--;
+        lock_release(&inode->lock);
+        lock_acquire(&list_lock);
+        return;
       }
-      lock_release(&inode->lock);
-      lock_release(&list_lock);
  
       /* Deallocate blocks if the file is marked as removed. */
       if (inode->removed) 
@@ -220,14 +221,54 @@ inode_close (struct inode *inode)
           free_map_release (inode->sector, 1);
           free_map_release (inode->data.start,
                             bytes_to_sectors (inode->data.length)); 
-          free (inode);
-          printf("# REMOVED\n");
         }
+      
+      lock_release(&inode->lock);
+      free (inode);
+      lock_release(&list_lock);
+
       return;
     }
   inode->open_cnt--;
   lock_release(&inode->lock);
 }
+
+// void
+// inode_close (struct inode *inode)
+// {
+//   /* Ignore null pointer. */
+//   if (inode == NULL)
+//   {
+//       return;
+//   }
+
+
+//     lock_acquire(&list_lock);
+//   /* Release resources if this was the last opener. */
+//   lock_acquire(&inode->lock);
+//   if (--inode->open_cnt == 0)
+//     {
+//       lock_release(&inode->lock);
+//       /* Remove from inode list. */
+//       list_remove (&inode->elem);
+
+
+//       /* Deallocate blocks if the file is marked as removed. */
+
+//       if (inode->removed)
+//         {
+//           free_map_release (inode->sector, 1);
+//           free_map_release (inode->data.start,
+//                             bytes_to_sectors (inode->data.length));
+//         }
+//       free (inode);
+//       lock_release(&list_lock);
+//       return;
+//     }
+//     lock_release(&inode->lock);
+//     lock_release(&list_lock);
+// }
+
 
 /* Marks INODE to be deleted when it is closed by the last caller who
    has it open. */

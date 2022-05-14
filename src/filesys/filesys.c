@@ -12,6 +12,8 @@
 /* The disk that contains the file system. */
 struct disk *filesys_disk;
 
+struct lock mutex;
+
 static void do_format (void);
 
 /* Initializes the file system module.
@@ -25,6 +27,7 @@ filesys_init (bool format)
 
   inode_init ();
   free_map_init ();
+  lock_init(&mutex);
 
   if (format) 
     do_format ();
@@ -47,7 +50,7 @@ filesys_done (void)
 bool
 filesys_create (const char *name, off_t initial_size) 
 {
-  //lock_acquire(&mutex);
+  lock_acquire(&mutex);
   disk_sector_t inode_sector = 0;
   struct dir *dir = dir_open_root ();
   bool success = (dir != NULL
@@ -58,6 +61,7 @@ filesys_create (const char *name, off_t initial_size)
     free_map_release (inode_sector, 1);
   dir_close (dir);
   
+  lock_release(&mutex);
   return success;
 }
 
@@ -69,6 +73,7 @@ filesys_create (const char *name, off_t initial_size)
 struct file *
 filesys_open (const char *name)
 {
+  lock_acquire(&mutex);
   struct dir *dir = dir_open_root ();
   struct inode *inode = NULL;
   struct file *file = NULL;
@@ -79,6 +84,7 @@ filesys_open (const char *name)
 
   file = file_open (inode);
   
+  lock_release(&mutex);
   return file;
 }
 
@@ -95,10 +101,12 @@ filesys_close (struct file *file)
 bool
 filesys_remove (const char *name) 
 {
+  lock_acquire(&mutex);
   struct dir *dir = dir_open_root ();
   bool success = dir != NULL && dir_remove (dir, name);
   dir_close (dir);
   
+  lock_release(&mutex);
   return success;
 }
 
@@ -106,10 +114,13 @@ filesys_remove (const char *name)
 static void
 do_format (void)
 {
+  lock_acquire(&mutex);
   printf ("Formatting file system...");
   free_map_create ();
   if (!dir_create (ROOT_DIR_SECTOR, 16))
     PANIC ("root directory creation failed");
+
   free_map_close ();
   printf ("done.\n");
+  lock_release(&mutex);
 }
