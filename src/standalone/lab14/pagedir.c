@@ -4,5 +4,4 @@
    
    gcc -Wall -Wextra -std=c99 -pedantic -m32 -g verify_adr.c pagedir.o
  */
-#error Read comment above. Leave this line in place.
 
