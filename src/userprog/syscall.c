@@ -147,6 +147,11 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:
     {
       f->eax = false;
+      if(!verify_fix_length((char *)esp[1], esp[2])){
+        process_exit(-1);
+        thread_exit();
+      }
+
       if(!(char *) esp[1]){
         process_exit(-1);
         thread_exit();
@@ -167,7 +172,6 @@ syscall_handler (struct intr_frame *f)
       }
 
       if(!verify_variable_length((char *) esp[1])){
-        printf("# HAHAHAHA\n");
         process_exit(-1);
         thread_exit();
       }
@@ -251,6 +255,11 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_EXEC:
     {
+      if(!verify_variable_length((char *) esp[1])){
+        process_exit(-1);
+        thread_exit();
+      }
+
       f->eax = process_execute( (char *) esp[1]);
 
       break;
@@ -327,15 +336,14 @@ bool verify_variable_length(char* start)
   unsigned current_pg_no = pg_no(start);
   struct thread *cur = thread_current();
   uint32_t *pd = cur->pagedir;
+  
+  if(!pagedir_get_page(pd, page_start))
+    return false;
 
   if(!is_user_vaddr(start))
     return false;
 
-  if(!pagedir_get_page(pd, page_start))
-    return false;
-
   size_t i = 0;
-
   while(start[i] != '\0')
   {
     i++;
