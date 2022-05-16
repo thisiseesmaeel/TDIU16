@@ -126,6 +126,7 @@ int main(int argc, char* argv[])
   /* Test the algorithm with a C-string (start address with
    * terminating null-character).
    */
+   
 
   for (i = 0; i < TEST_CASE_COUNT; ++i)
   {
