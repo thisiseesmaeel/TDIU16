@@ -5,7 +5,7 @@
 #include "thread.h"
 #define UNUSED(x) (void)(x)
 
-/* verfy_*_lenght are intended to be used in a system call that accept
+/* verfy_*_length are intended to be used in a system call that accept
  * parameters containing suspisious (user mode) adresses. The
  * operating system (executng the system call in kernel mode) must not
  * be fooled into using (reading or writing) addresses not available
@@ -28,27 +28,24 @@ bool verify_fix_length(void* start, unsigned length)
 {
   //ADD YOUR CODE HERE
   bool result = false;
-  void* begin = pg_round_down(start);
+  void* page_start = pg_round_down(start);
+  void* page_end = (void *) ((int)page_start + PGSIZE);
   void* end = (void*) ((unsigned) start + length );
 
-
-    if(pagedir_get_page(thread->pagedir, begin) == NULL)
+  if(pagedir_get_page(thread->pagedir, page_start) == NULL)
+  {
+    return result;
+  }
+  while(page_end < end)
+  {
+    if(pagedir_get_page(thread->pagedir, page_end) == NULL)
     {
-      printf("False in start\n");
       return result;
     }
-    while((begin + PGSIZE ) < end)
-    {
-      if(pagedir_get_page(thread->pagedir, begin + PGSIZE) == NULL)
-      {
-        printf("False in end\n");
-        return result;
-      }
-      begin = begin + PGSIZE;
-    }
+    page_end = (void *) ((int)page_end + PGSIZE);
+  }
 
   result = true;
-  printf("True\n");
   return result;
 }
 
@@ -60,17 +57,29 @@ bool verify_fix_length(void* start, unsigned length)
 bool verify_variable_length(char* start)
 {
    // ADD YOUR CODE HERE
-  char* test = "";
-  int counter = 0;
-  //unsigned int length = strlen(start);
+  bool result = false;
+  void* page_start = pg_round_down(start);
+  unsigned current_pg_no = pg_no(start);
 
-  while (is_end_of_string(start))
+  if(pagedir_get_page(thread->pagedir, page_start) == NULL)
   {
-    printf("Something....\n");
+    return result;
   }
-  
-  return false; 
+  while(!is_end_of_string(start))
+  {
+    start++;
+    if(pg_no(start) != current_pg_no){
+      current_pg_no = pg_no(start);
+      page_start = pg_round_down(start);
+      if(pagedir_get_page(thread->pagedir, page_start) == NULL)
+      {
+        return result;
+      }
+    }
+  }  
+  return true; 
 }
+
 
 /* Definition of test cases. */
 struct test_case_t
@@ -99,7 +108,7 @@ int main(int argc, char* argv[])
 
   if ( argc == 2 )
   {
-    simulator_set_pagefault_time( /* atoi(argv[1]) */ 0 );
+    simulator_set_pagefault_time( atoi(argv[1]) );
   }
   thread_init();
 
@@ -117,12 +126,13 @@ int main(int argc, char* argv[])
   /* Test the algorithm with a C-string (start address with
    * terminating null-character).
    */
- /*  for (i = 0; i < TEST_CASE_COUNT; ++i)
+
+  for (i = 0; i < TEST_CASE_COUNT; ++i)
   {
     start_evaluate_algorithm(test_case[i].start, test_case[i].length);
     result = verify_variable_length(test_case[i].start);
     evaluate(result);
     end_evaluate_algorithm();
-  }  */
+  } 
   return 0;
 }

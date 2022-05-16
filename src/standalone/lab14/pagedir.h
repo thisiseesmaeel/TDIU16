@@ -5,7 +5,7 @@ typedef int bool;
 #define false 0
 #define true 1
 
-/* Returns true iff 'adr' contains a null-character ('\0'). */
+/* Returns true if 'adr' contains a null-character ('\0'). */
 bool is_end_of_string(char* adr);
 
 /* Returns the start address of the page that contains 'adr'. */
