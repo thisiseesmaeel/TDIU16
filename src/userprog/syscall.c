@@ -17,12 +17,16 @@
 #include "userprog/flist.h"
 #include "userprog/plist.h"
 #include "devices/timer.h"
+#include "limits.h"
 
 
 static void syscall_handler (struct intr_frame *);
 
 struct file* retrieve_file(int32_t );
 
+bool verify_fix_length(void* , unsigned );
+
+bool verify_variable_length(char* );
 
 void
 syscall_init (void) 
@@ -97,24 +101,19 @@ syscall_handler (struct intr_frame *f)
       }
       else if(esp[1] > 1) // Reading from a file
       {
+        if(!verify_fix_length((char *)esp[2], esp[3])){
+          process_exit(-1);
+          thread_exit();
+        }
+
         if(!((int)esp[1] > FILE_TABLE_SIZE)){
           struct file *file_ptr= retrieve_file(esp[1]);
-          // if(file_ptr != NULL){
-          //   printf("# IS NOT NULL\n");
-          //   if((file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){
-          //     printf("# VALID SIZE TO READ\n");
-          //   }
-          // }
-          if (file_ptr != NULL && (file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){ 
+
+          if (file_ptr && (file_tell(file_ptr) + esp[3] <= file_length(file_ptr))){ 
             int result = file_read(file_ptr, (char *)esp[2], esp[3]);
             f->eax = result;
           }
         }
-      }
-      
-      if((int)f->eax == -1){
-        process_exit(-1);
-        thread_exit();
       }
       
       break;
@@ -129,13 +128,17 @@ syscall_handler (struct intr_frame *f)
         putbuf((char *)esp[2], esp[3]);
         f->eax = esp[3];
       }
-      else if(esp[1] > 1) // Writing to a file
+      else if(esp[1] > 1 && esp[1] < FILE_TABLE_SIZE) // Writing to a file
       {
+
+        if(!verify_fix_length((char *)esp[2], esp[3])){
+          process_exit(-1);
+          thread_exit();
+        }
+
         struct file *file_ptr= retrieve_file(esp[1]);
-        if( file_ptr != NULL) {
+        if( file_ptr)
           f->eax = file_write(file_ptr, (char *)esp[2], esp[3]);
-         
-        } 
       }
 
       break;
@@ -144,7 +147,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:
     {
       f->eax = false;
-      if((char *) esp[1] == NULL){
+      if(!(char *) esp[1]){
         process_exit(-1);
         thread_exit();
         break;
@@ -158,13 +161,20 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_OPEN:
     {
-      if((char *) esp[1] == NULL){
+      if(!(char *) esp[1]){
         f->eax = -1;
         break;
       }
+
+      if(!verify_variable_length((char *) esp[1])){
+        printf("# HAHAHAHA\n");
+        process_exit(-1);
+        thread_exit();
+      }
+
       struct file* file_ptr = filesys_open((char *)esp[1]);
 
-      if(file_ptr == NULL)
+      if(!file_ptr)
         f->eax = -1;
       else
       {
@@ -187,7 +197,7 @@ syscall_handler (struct intr_frame *f)
       struct thread* current_thread = thread_current();
       struct file* file_ptr = retrieve_file(esp[1]);
 
-      if(file_ptr != NULL && esp[1] > 1)
+      if(file_ptr && esp[1] > 1)
       {
         file_table_remove(&(current_thread->file_table), esp[1]);
         file_close(file_ptr);
@@ -205,7 +215,7 @@ syscall_handler (struct intr_frame *f)
     {
       struct file* file_ptr = retrieve_file(esp[1]);
       
-      if(file_ptr != NULL)
+      if(file_ptr)
       {
         off_t length = file_length(file_ptr);
         if(esp[2] > length)
@@ -222,10 +232,9 @@ syscall_handler (struct intr_frame *f)
       struct thread* current_thread = thread_current();
       struct file* file_ptr = file_table_find(&(current_thread->file_table), esp[1]);
       
-      if(file_ptr != NULL)
-      {
+      if(file_ptr)
         f->eax = file_tell(file_ptr);
-      }
+      
       break;
     }
 
@@ -234,15 +243,14 @@ syscall_handler (struct intr_frame *f)
       f->eax = -1;
       struct file* file_ptr = retrieve_file(esp[1]);
 
-      if(file_ptr != NULL){
+      if(file_ptr)
         f->eax = file_length(file_ptr);
-      }
+
       break;
     }
 
     case SYS_EXEC:
     {
-      //printf("# \nSYS_EXEC IS RUNNING!\n");
       f->eax = process_execute( (char *) esp[1]);
 
       break;
@@ -256,14 +264,12 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_SLEEP:
     {
-      //printf ("# \nSYS_SLEEP is running!\n");
       timer_msleep(esp[1]);
       break;
     }
 
     case SYS_WAIT:
     {
-      //printf ("# \nSYS_WAIT is running!\n");
       f -> eax = process_wait( (int) esp[1]);
       break;
     }
@@ -286,4 +292,60 @@ struct file* retrieve_file(int32_t fd)
 {
   struct thread *current_thread = thread_current();
   return file_table_find(&(current_thread->file_table), fd);
+}
+
+
+bool verify_fix_length(void* start, unsigned length)
+{
+  void* page_start = pg_round_down(start);
+  void* page_end = (void *) ((int)page_start + PGSIZE);
+  void* end = (void*) ((unsigned) start + length );
+
+  struct thread *cur = thread_current();
+  uint32_t *pd = cur->pagedir;
+
+  if(!is_user_vaddr(start))
+    return false;
+
+  if(!pagedir_get_page(pd, page_start))
+    return false;
+
+  while(page_end < end)
+  {
+    if(!pagedir_get_page(pd, page_end))
+      return false;
+
+    page_end = (void *) ((int)page_end + PGSIZE);
+  }
+
+  return true;
+}
+
+bool verify_variable_length(char* start)
+{
+  void* page_start = pg_round_down(start);
+  unsigned current_pg_no = pg_no(start);
+  struct thread *cur = thread_current();
+  uint32_t *pd = cur->pagedir;
+
+  if(!is_user_vaddr(start))
+    return false;
+
+  if(!pagedir_get_page(pd, page_start))
+    return false;
+
+  size_t i = 0;
+
+  while(start[i] != '\0')
+  {
+    i++;
+    if(pg_no(&start[i]) != current_pg_no){
+      current_pg_no = pg_no(&start[i]);
+      page_start = pg_round_down(&start[i]);
+
+      if(!pagedir_get_page(pd, page_start))
+        return false;
+    }
+  }  
+  return true; 
 }

@@ -1,0 +1,2 @@
+make[1]: *** [../../tests/Make.tests:45: check] Error 1
+make: *** [../Makefile.kernel:10: check] Error 2
