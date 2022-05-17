@@ -28,6 +28,8 @@ bool verify_fix_length(void* , unsigned );
 
 bool verify_variable_length(char* );
 
+bool verify_test(int32_t *);
+
 void
 syscall_init (void) 
 {
@@ -57,6 +59,11 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   int32_t* esp = (int32_t*)f->esp;
+
+  if(!verify_test(esp)){
+    process_exit(-1);
+    thread_exit();
+  }
   // esp[0]  --> syscall number
   // esp[1]  --> param number 1
   switch ( esp[0] /* retrive syscall number */ )
@@ -358,5 +365,36 @@ bool verify_variable_length(char* start)
         return false;
     }
   }  
+  return true; 
+}
+
+
+bool verify_test(int32_t* esp)
+{
+  if(!is_user_vaddr((char *) esp))
+    return false;
+
+  if(!verify_variable_length((void *) esp)){
+    //printf("# false\n");
+    return false;  
+  }
+
+  if(esp[0] >= SYS_NUMBER_OF_CALLS || esp[0] <= 0)
+     return false;
+
+  int sys_nr = (int) esp[0];
+  int counter = argc[sys_nr];
+  // printf("# sys-nr %d\n", sys_nr);
+  // printf("# counter %d\n", counter);
+
+  for(int i = 0; i < counter; ++i){
+    
+    if(!verify_variable_length((void *)(esp +(i + 1)))){
+      //printf("# HEREEEEEEEEEEEEEEEEE false\n");
+      return false;
+    }
+  }
+
+  //printf("# JOjsdijfoiadsjfg oiaewjrs\n");
   return true; 
 }
