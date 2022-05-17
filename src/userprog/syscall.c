@@ -76,7 +76,7 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_EXIT:
     {
-      if(!is_user_vaddr((char *) esp[1]))
+      if(!verify_fix_length((char *) esp, 8))
         process_exit(-1);
       else
         process_exit((int) esp[1]);
@@ -347,11 +347,12 @@ bool verify_variable_length(char* start)
   struct thread *cur = thread_current();
   uint32_t *pd = cur->pagedir;
   
+  if(!is_user_vaddr(start))
+    return false;
+
   if(!pagedir_get_page(pd, page_start))
     return false;
 
-  if(!is_user_vaddr(start))
-    return false;
 
   size_t i = 0;
   while(start[i] != '\0')
@@ -374,27 +375,23 @@ bool verify_test(int32_t* esp)
   if(!is_user_vaddr((char *) esp))
     return false;
 
-  if(!verify_variable_length((void *) esp)){
-    //printf("# false\n");
+  if(!verify_variable_length((void *) esp))
+    return false;
+
+  if(!verify_fix_length((void *) esp, 4))
     return false;  
-  }
+
 
   if(esp[0] >= SYS_NUMBER_OF_CALLS || esp[0] <= 0)
      return false;
 
   int sys_nr = (int) esp[0];
   int counter = argc[sys_nr];
-  // printf("# sys-nr %d\n", sys_nr);
-  // printf("# counter %d\n", counter);
 
   for(int i = 0; i < counter; ++i){
-    
-    if(!verify_variable_length((void *)(esp +(i + 1)))){
-      //printf("# HEREEEEEEEEEEEEEEEEE false\n");
+    if(!verify_variable_length((void *)(esp +(i + 1))))
       return false;
-    }
   }
-
-  //printf("# JOjsdijfoiadsjfg oiaewjrs\n");
+  
   return true; 
 }
