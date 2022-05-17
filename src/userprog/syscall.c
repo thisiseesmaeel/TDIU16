@@ -69,7 +69,10 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_EXIT:
     {
-      process_exit((int) esp[1]);
+      if(!is_user_vaddr((char *) esp[1]))
+        process_exit(-1);
+      else
+        process_exit((int) esp[1]);
       thread_exit();
       
       break;
