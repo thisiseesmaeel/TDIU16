@@ -28,7 +28,7 @@ bool verify_fix_length(void* , unsigned );
 
 bool verify_variable_length(char* );
 
-bool verify_test(int32_t *);
+bool verify_stack_pointers(int32_t *);
 
 void
 syscall_init (void) 
@@ -60,7 +60,7 @@ syscall_handler (struct intr_frame *f)
 {
   int32_t* esp = (int32_t*)f->esp;
 
-  if(!verify_test(esp)){
+  if(!verify_stack_pointers(esp)){
     process_exit(-1);
     thread_exit();
   }
@@ -76,7 +76,7 @@ syscall_handler (struct intr_frame *f)
     
     case SYS_EXIT:
     {
-      if(!verify_fix_length((char *) esp, 8))
+      if(!verify_fix_length((void *) esp + 1, 4))
         process_exit(-1);
       else
         process_exit((int) esp[1]);
@@ -88,7 +88,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_READ:
     {
       f->eax = -1;  // As default returns -1
-      
+
       if (esp[1] == STDIN_FILENO) // Reading from standard input (keyboard)
       {
         int read_char_counter = 0;
@@ -111,7 +111,7 @@ syscall_handler (struct intr_frame *f)
       }
       else if(esp[1] > 1) // Reading from a file
       {
-        if(!verify_fix_length((char *)esp[2], esp[3])){
+        if(!verify_fix_length((void *)esp[2], (int) esp[3])){
           process_exit(-1);
           thread_exit();
         }
@@ -141,7 +141,7 @@ syscall_handler (struct intr_frame *f)
       else if(esp[1] > 1 && esp[1] < FILE_TABLE_SIZE) // Writing to a file
       {
 
-        if(!verify_fix_length((char *)esp[2], esp[3])){
+        if(!verify_fix_length((void *)esp[2], (int) esp[3])){
           process_exit(-1);
           thread_exit();
         }
@@ -157,7 +157,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:
     {
       f->eax = false;
-      if(!verify_fix_length((char *)esp[1], esp[2])){
+      if(!verify_variable_length((char *)esp[1])){
         process_exit(-1);
         thread_exit();
       }
@@ -176,11 +176,6 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_OPEN:
     {
-      if(!(char *) esp[1]){
-        f->eax = -1;
-        break;
-      }
-
       if(!verify_variable_length((char *) esp[1])){
         process_exit(-1);
         thread_exit();
@@ -370,7 +365,7 @@ bool verify_variable_length(char* start)
 }
 
 
-bool verify_test(int32_t* esp)
+bool verify_stack_pointers(int32_t* esp)
 {
   if(!is_user_vaddr((char *) esp))
     return false;
@@ -389,7 +384,7 @@ bool verify_test(int32_t* esp)
   int counter = argc[sys_nr];
 
   for(int i = 0; i < counter; ++i){
-    if(!verify_variable_length((void *)(esp +(i + 1))))
+    if(!verify_fix_length((void *)(esp +(i + 1)), 4))
       return false;
   }
   

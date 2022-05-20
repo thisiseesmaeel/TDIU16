@@ -1,2 +1,9 @@
-make[1]: *** [../../tests/Make.tests:45: check] Error 1
-make: *** [../Makefile.kernel:10: check] Error 2
+make[1]: *** [../../tests/Make.tests:105: tests/filesys/base/sm-random.output] Interrupt
+make[1]: *** [../../tests/Make.tests:105: tests/userprog/multi-recurse.output] Interrupt
+make[1]: *** [../../tests/Make.tests:105: tests/filesys/base/lg-random.output] Interrupt
+make[1]: *** [../../tests/Make.tests:105: tests/filesys/base/lg-seq-block.output] Interrupt
+make[1]: *** [../../tests/Make.tests:105: tests/filesys/base/lg-seq-random.output] Interrupt
+make[1]: *** [../../tests/Make.tests:105: tests/filesys/base/sm-full.output] Interrupt
+make[1]: *** [../../tests/Make.tests:105: tests/klaar/pfs.output] Interrupt
+make[1]: *** [../../tests/Make.tests:105: tests/filesys/base/sm-create.output] Interrupt
+make: *** [../Makefile.kernel:10: check] Interrupt
